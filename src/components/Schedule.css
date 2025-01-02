@@ -1,0 +1,264 @@
+.schedule {
+  padding: 20px;
+  max-width: 100%;
+  margin-left: 250px;
+  margin-right: 20px;
+}
+
+.schedule-container {
+  background: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  position: relative;
+  z-index: 1;
+  margin-top: -1px;
+}
+
+.current-month,
+.other-months {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all content stays within bounds */
+.tabs,
+.header-with-pdf,
+.view-buttons,
+.selectors-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  position: relative;
+  padding-left: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  background: #f5f5f5;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  position: relative;
+  transition: all 0.2s ease;
+  margin-right: 4px;
+  min-width: 150px;
+  text-align: center;
+  overflow: visible;
+}
+
+.tab-button.active {
+  background-color: white;
+  color: #39587F;
+  font-weight: 500;
+  z-index: 2;
+  border-color: #ddd;
+  margin-bottom: -1px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid white;
+}
+
+.tab-button:hover:not(.active) {
+  background-color: #e9ecef;
+}
+
+.view-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.view-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #C5D4DC;
+  color: #39587F;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.view-button.active {
+  background-color: #39587F;
+  color: #ffffff;
+  border-color: #39587F;
+}
+
+.view-button:hover {
+  background-color: #39587F;
+  color: #ffffff;
+  border-color: #39587F;
+}
+
+.header-with-pdf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.pdf-button {
+  background: none;
+  width: 40px;
+  border: none;
+  color: #ff0800;
+  cursor: pointer;
+}
+
+.pdf-button:hover {
+  color: #b30000;
+  background-color: #C5D4DC;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  min-width: 600px;
+  width: 100%;
+}
+
+.selectors-wrapper {
+  display: flex;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+}
+
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 250px;
+}
+
+.selector label {
+  color: #39587F;
+  font-weight: 500;
+  font-size: 14px;
+  display: block;
+}
+
+.selector select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2339587F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 35px;
+}
+
+.selector select:hover {
+  border-color: #99BED5;
+  background-color: #f8f9fa;
+}
+
+.selector select:focus {
+  outline: none;
+  border-color: #39587F;
+  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
+}
+
+.selector select option {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.button-group button {
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-group button:first-child {
+  background-color: #39587F;
+  color: white;
+  border: none;
+}
+
+.button-group button:first-child:hover {
+  background-color: #2c4160;
+}
+
+.button-group .pdf-button {
+  padding: 0 10px;
+  background: none;
+  border: 1px solid #ddd;
+}
+
+.button-group .pdf-button:hover {
+  background-color: #f5f5f5;
+}
+
+.other-months {
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.other-months h2 {
+  color: #39587F;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.search-button {
+  background-color: #39587F;
+  color: white;
+  border: none;
+  height: 42px;
+  padding: 0 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  margin-bottom: 1px;
+}
+
+.search-button:hover:not(:disabled) {
+  background-color: #2c4160;
+}
+
+.search-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+} 

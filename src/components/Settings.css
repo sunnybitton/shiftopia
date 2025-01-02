@@ -1,0 +1,86 @@
+.settings {
+  padding: 20px;
+  max-width: 100%;
+  margin-left: 250px;
+  margin-right: 20px;
+}
+
+.settings-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  max-width: 500px;
+}
+
+.settings h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.settings h2 {
+  color: #39587F;
+  margin-bottom: 20px;
+  font-size: 1.2em;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #39587F;
+  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
+}
+
+.error-message {
+  color: #dc3545;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #fff5f5;
+  border-radius: 4px;
+}
+
+.success-message {
+  color: #28a745;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f4fff5;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #39587F;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+}
+
+button:hover {
+  background-color: #2c4160;
+}
+
+button:disabled {
+  background-color: #99BED5;
+  cursor: not-allowed;
+} 

@@ -1,0 +1,81 @@
+.calendar {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f8f9fa;
+  padding: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.calendar-body {
+  padding: 10px;
+}
+
+.calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border: 1px solid #eee;
+  padding: 5px;
+  min-height: 100px;
+}
+
+.calendar-day.empty {
+  background: #f8f9fa;
+}
+
+.day-number {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.stations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.station-tag {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.duty-officer {
+  background-color: #b9dbff;
+  color: rgb(0, 0, 0);
+}
+
+.after-duty {
+  background-color: #fce7c1;  /* light orange */
+  color: black;
+}
+
+.vacation {
+  background-color: #bdebbd;  /* light green */
+  color: black;
+}
+
+.calendar-day.today {
+  background-color: #f8f9fa;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+}
+
+.calendar-day.today .day-number {
+  color: #007bff;
+  font-weight: bold;
+} 
