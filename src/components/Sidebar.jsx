@@ -4,17 +4,13 @@ import './Sidebar.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isManager = user.role?.toLowerCase() === 'manager';
 
   const handleLogout = () => {
+    // Clear user data
     localStorage.removeItem('user');
-    navigate('/login');
+    // Force a page reload and redirect to login
+    window.location.href = '/login';
   };
-
-  if (!user.userName) {
-    return null;
-  }
 
   return (
     <div className="sidebar">
@@ -29,24 +25,20 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
+            <NavLink to="/employees" className={({ isActive }) => isActive ? 'active' : ''}>
+              Employees
+            </NavLink>
+          </li>
+          <li>
             <NavLink to="/schedule" className={({ isActive }) => isActive ? 'active' : ''}>
               Schedule
             </NavLink>
           </li>
-          {isManager && (
-            <>
-              <li>
-                <NavLink to="/employees" className={({ isActive }) => isActive ? 'active' : ''}>
-                  Employees
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
-                  Messages
-                </NavLink>
-              </li>
-            </>
-          )}
+          <li>
+            <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
+              Messages
+            </NavLink>
+          </li>
           <li>
             <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
               Settings
@@ -54,9 +46,6 @@ const Sidebar = () => {
           </li>
         </ul>
       </nav>
-      <div className="nav-user">
-        <span>Welcome, {user.firstName} {user.lastName}</span>
-      </div>
       <div className="logout-container">
         <button onClick={handleLogout} className="logout-button">
           Logout

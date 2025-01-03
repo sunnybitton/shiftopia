@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Employees from './components/Employees';
 import Schedule from './components/Schedule';
+import Settings from './components/Settings';
 import Login from './components/Login';
 import Messages from './components/Messages';
 import './App.css';
@@ -29,7 +30,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/employees" element={<Employees />} />
                     <Route path="/schedule" element={<Schedule />} />
-                    <Route path="/settings" element={<div>Settings Page (Coming Soon)</div>} />
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/messages" element={<Messages />} />
                   </Routes>
                 </main>

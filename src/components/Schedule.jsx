@@ -127,7 +127,9 @@ const Schedule = () => {
       
       // Start from index 3 for station columns
       for (let i = 3; i < row.length; i++) {
-        if (row[i]?.trim() === selectedEmployee && stationNames[i]) {
+        // Convert the value to string before comparing
+        const cellValue = row[i]?.toString() || '';
+        if (cellValue.trim() === selectedEmployee && stationNames[i]) {
           stations.push(stationNames[i]);
         }
       }

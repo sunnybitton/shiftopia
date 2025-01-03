@@ -12,10 +12,19 @@ const ListView = ({ scheduleData, view, currentDate }) => {
   const getWeekDates = () => {
     const curr = new Date(currentDate);
     const week = [];
+    
+    // Get the first day of the week
     curr.setDate(curr.getDate() - curr.getDay() + 1);
     
+    // Get current month
+    const currentMonth = currentDate.getMonth();
+    
     for (let i = 0; i < 7; i++) {
-      week.push(new Date(curr));
+      const date = new Date(curr);
+      // Only add the date if it's in the same month as currentDate
+      if (date.getMonth() === currentMonth) {
+        week.push(date);
+      }
       curr.setDate(curr.getDate() + 1);
     }
     return week;
@@ -46,7 +55,12 @@ const ListView = ({ scheduleData, view, currentDate }) => {
             const stations = scheduleData[dayNumber] || [];
             
             return (
-              <div key={date.toISOString()} className="day-column">
+              <div 
+                key={date.toISOString()} 
+                className={`day-column ${
+                  date.toDateString() === currentDate.toDateString() ? 'today' : ''
+                }`}
+              >
                 {stations.length > 0 ? (
                   <div className="stations-list-column">
                     {stations.map((station, idx) => (

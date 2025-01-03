@@ -12,13 +12,38 @@ const Settings = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  const validatePassword = (password) => {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    if (!/\d/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (!/[a-zA-Z]/.test(password)) {
+      return 'Password must contain at least one letter';
+    }
+    return null;
+  };
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
+    // Validate new password
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      setError('New password must be different from current password');
       return;
     }
 
@@ -26,6 +51,7 @@ const Settings = () => {
       setLoading(true);
       await updateSheetData(user.email, currentPassword, newPassword);
       setSuccess('Password updated successfully');
+      // Clear form
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
