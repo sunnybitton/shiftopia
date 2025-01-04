@@ -19,10 +19,9 @@ const Messages = () => {
         
         // Get message template from N2 (index [1][13])
         const template = data[1]?.[13] || 'Default message template';
-        // Get emoji from O2 (index [1][14])
-        const emoji = data[1]?.[14] || '';
+
         
-        setMessageTemplate(template + emoji);
+        setMessageTemplate(template);
         
       } catch (err) {
         console.error('Error fetching message template:', err);
@@ -164,14 +163,14 @@ const Messages = () => {
           // Add RTL mark only to the first message
           let dateMessage = (i === 0 ? '\u200F' : '') + messageTemplate
             .replace(/\\n/g, '\n')
-            .replace('{dayInHebrew}', getDayInHebrew(date))
-            .replace('{date}', formatDateDDMM(date))
-            .replace('{carmelSide}', schedule.carmelSide)
-            .replace('{carmelDoctor}', schedule.carmelDoctor)
-            .replace('{yamSide}', schedule.yamSide)
-            .replace('{yamDoctor}', schedule.yamDoctor)
-            .replace('{dayHospitalization}', schedule.dayHospitalization)
-            .replace('{triage}', schedule.triage);
+            .replace(/{dayInHebrew}/g, getDayInHebrew(date))
+            .replace(/{date}/g, formatDateDDMM(date))
+            .replace(/{carmelSide}/g, schedule.carmelSide)
+            .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
+            .replace(/{yamSide}/g, schedule.yamSide)
+            .replace(/{yamDoctor}/g, schedule.yamDoctor)
+            .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
+            .replace(/{triage}/g, schedule.triage);
 
           // Add to final message with triple line breaks between days
           finalMessage += dateMessage + (i < dates.length - 1 ? '\n\n\n' : '');
@@ -182,14 +181,14 @@ const Messages = () => {
         const schedule = await fetchScheduleForDate(startDate);
         finalMessage = '\u200F' + messageTemplate
           .replace(/\\n/g, '\n')
-          .replace('{dayInHebrew}', getDayInHebrew(startDate))
-          .replace('{date}', formatDateDDMM(startDate))
-          .replace('{carmelSide}', schedule.carmelSide)
-          .replace('{carmelDoctor}', schedule.carmelDoctor)
-          .replace('{yamSide}', schedule.yamSide)
-          .replace('{yamDoctor}', schedule.yamDoctor)
-          .replace('{dayHospitalization}', schedule.dayHospitalization)
-          .replace('{triage}', schedule.triage);
+          .replace(/{dayInHebrew}/g, getDayInHebrew(startDate))
+          .replace(/{date}/g, formatDateDDMM(startDate))
+          .replace(/{carmelSide}/g, schedule.carmelSide)
+          .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
+          .replace(/{yamSide}/g, schedule.yamSide)
+          .replace(/{yamDoctor}/g, schedule.yamDoctor)
+          .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
+          .replace(/{triage}/g, schedule.triage);
       }
 
       // Copy message directly without asking for platform choice
