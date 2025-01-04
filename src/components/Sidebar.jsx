@@ -4,11 +4,11 @@ import './Sidebar.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isManager = user.role?.toLowerCase() === 'manager';
 
   const handleLogout = () => {
-    // Clear user data
     localStorage.removeItem('user');
-    // Force a page reload and redirect to login
     window.location.href = '/login';
   };
 
@@ -24,21 +24,25 @@ const Sidebar = () => {
               Dashboard
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/employees" className={({ isActive }) => isActive ? 'active' : ''}>
-              Employees
-            </NavLink>
-          </li>
+          {isManager && (
+            <li>
+              <NavLink to="/employees" className={({ isActive }) => isActive ? 'active' : ''}>
+                Employees
+              </NavLink>
+            </li>
+          )}
           <li>
             <NavLink to="/schedule" className={({ isActive }) => isActive ? 'active' : ''}>
               Schedule
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
-              Messages
-            </NavLink>
-          </li>
+          {isManager && (
+            <li>
+              <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
+                Messages
+              </NavLink>
+            </li>
+          )}
           <li>
             <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
               Settings

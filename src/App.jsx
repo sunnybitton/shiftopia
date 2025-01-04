@@ -11,6 +11,13 @@ import './App.css';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('user');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isManager = user.role?.toLowerCase() === 'manager';
+
+  // Redirect non-managers trying to access restricted routes
+  const ManagerRoute = ({ children }) => {
+    return isManager ? children : <Navigate to="/" />;
+  };
 
   return (
     <Router>
@@ -28,10 +35,24 @@ function App() {
                 <main className="main-content">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
-                    <Route path="/employees" element={<Employees />} />
+                    <Route 
+                      path="/employees" 
+                      element={
+                        <ManagerRoute>
+                          <Employees />
+                        </ManagerRoute>
+                      } 
+                    />
                     <Route path="/schedule" element={<Schedule />} />
+                    <Route 
+                      path="/messages" 
+                      element={
+                        <ManagerRoute>
+                          <Messages />
+                        </ManagerRoute>
+                      } 
+                    />
                     <Route path="/settings" element={<Settings />} />
-                    <Route path="/messages" element={<Messages />} />
                   </Routes>
                 </main>
               </div>

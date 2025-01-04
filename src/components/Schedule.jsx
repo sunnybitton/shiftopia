@@ -19,9 +19,10 @@ const Schedule = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentView, setCurrentView] = useState('monthly');
 
-  // Get logged-in user's userName instead of name
+  // Get logged-in user's info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userName = user.userName || '';
+  const isManager = user.role?.toLowerCase() === 'manager';
 
   // Memoize the employee and month lists
   const memoizedEmployees = useMemo(() => employees, [employees]);
@@ -32,26 +33,21 @@ const Schedule = () => {
     const initializeData = async () => {
       try {
         setLoading(true);
-        // Get user info and role
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const isManager = user.role?.toLowerCase() === 'manager';
         
         // Fetch employee data from employee_data sheet
         const employeeData = await fetchSheetData('employee_data');
         
-        // Filter employee names based on role
-        const employeeNames = employeeData.slice(1)
-          .map(row => row[6])  // userName is in column index 6
-          .filter(Boolean)     // Remove any empty values
-          .filter(name => {
-            if (isManager) {
-              return true;  // Show all employees for managers
-            } else {
-              return name === user.userName;  // Only show current user for non-managers
-            }
-          });
-        
-        setEmployees(employeeNames);
+        if (isManager) {
+          // For managers: show all employee usernames
+          const employeeNames = employeeData.slice(1)
+            .map(row => row[6])  // userName is in column index 6
+            .filter(Boolean);    // Remove any empty values
+          setEmployees(employeeNames);
+        } else {
+          // For regular employees: only show their own username
+          setEmployees([userName]);
+          setSelectedEmployee(userName); // Auto-select the employee
+        }
         
         // Get months from the schedule sheet
         const data = await fetchSheetData();
@@ -334,19 +330,29 @@ const Schedule = () => {
           <div className="other-months">
             <div className="selectors-wrapper">
               <div className="selector">
-                <label htmlFor="employee">Select Employee:</label>
-                <select
-                  id="employee"
-                  value={selectedEmployee}
-                  onChange={handleEmployeeChange}
-                >
-                  <option value="">Choose an employee...</option>
-                  {memoizedEmployees.map((employee) => (
-                    <option key={employee} value={employee}>
-                      {employee}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="employee">Employee:</label>
+                {isManager ? (
+                  <select
+                    id="employee"
+                    value={selectedEmployee}
+                    onChange={handleEmployeeChange}
+                  >
+                    <option value="">Choose an employee...</option>
+                    {memoizedEmployees.map((employee) => (
+                      <option key={employee} value={employee}>
+                        {employee}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    id="employee"
+                    value={userName}
+                    disabled
+                  >
+                    <option value={userName}>{userName}</option>
+                  </select>
+                )}
               </div>
 
               <div className="selector">
