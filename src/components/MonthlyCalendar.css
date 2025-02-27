@@ -3,99 +3,121 @@
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 280px);
 }
 
 .calendar-header {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  background: #f5f7fa;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background: white;
   border-bottom: 1px solid #eee;
+  width: 100%;
 }
 
 .weekday-header {
-  padding: 12px 8px;
+  padding: 8px 2px;
   text-align: center;
-  font-weight: 500;
-  color: #39587F;
-  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: 100%;
 }
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: #eee;
-  padding: 1px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-flow: row;
+  grid-auto-rows: 1fr;
+  background: white;
+  border-top: 1px solid #eee;
+  width: 100%;
+  flex: 1;
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   background: white;
-  padding: 8px;
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 4px 2px;
   display: flex;
   flex-direction: column;
-  min-height: 100px;
   position: relative;
+  width: 100%;
+  min-height: 80px;
+  max-width: 100%;
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: none;
 }
 
 .calendar-day.empty {
-  background: #f9f9f9;
+  background: #fafafa;
 }
 
 .calendar-day.today {
-  background: rgba(57, 88, 127, 0.05);
+  background: #f8fafd;
 }
 
 .calendar-day.today .day-number {
   background: #39587F;
   color: white;
+  font-weight: 600;
 }
 
 .day-number {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #333;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  margin-bottom: 4px;
+  margin: 0 auto 2px;
 }
 
 .shifts-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   overflow: hidden;
+  flex: 1;
+  padding: 0 1px;
 }
 
 .shift-tag {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
   background: #f5f7fa;
   color: #39587F;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .shift-tag.duty-officer {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f4ff;
+  color: #1565c0;
 }
 
 .shift-tag.after-duty {
-  background: #fff3e0;
-  color: #f57c00;
+  background: #fff4e5;
+  color: #e65100;
 }
 
 .shift-tag.vacation {
   background: #e8f5e9;
-  color: #388e3c;
+  color: #2e7d32;
 }
 
 /* Mobile styles */
@@ -103,52 +125,60 @@
   .monthly-calendar {
     border-radius: 8px;
     margin: 0;
+    height: calc(100vh - 340px);
   }
 
   .calendar-header {
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
+    background: white;
   }
 
   .weekday-header {
-    padding: 8px 4px;
-    font-size: 12px;
+    padding: 4px 0;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .calendar-grid {
+    grid-auto-rows: minmax(25px, auto);
   }
 
   .calendar-day {
-    min-height: 80px;
-    padding: 4px;
+    min-height: 25px;
+    padding: 1px 0;
   }
 
   .day-number {
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
+    font-size: 10px;
+    width: 14px;
+    height: 14px;
+    margin: 0 auto 0;
   }
 
   .shifts-list {
-    gap: 2px;
+    gap: 0;
+    padding: 0;
+    max-height: calc(100% - 15px);
   }
 
   .shift-tag {
-    font-size: 10px;
-    padding: 2px 4px;
+    font-size: 8px;
+    padding: 0 1px;
+    margin: 0;
+    border-radius: 1px;
+    height: 10px;
+    line-height: 9px;
   }
 
-  /* Show more shifts indicator if there are hidden shifts */
-  .calendar-day.has-shifts .shifts-list {
-    position: relative;
-  }
-
+  /* More events indicator */
   .calendar-day.has-shifts .shifts-list::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 8px;
-    background: linear-gradient(to bottom, transparent, white);
-    pointer-events: none;
+    height: 3px;
+  }
+
+  /* Adjust the container padding */
+  .schedule {
+    padding: 0;
   }
 } 

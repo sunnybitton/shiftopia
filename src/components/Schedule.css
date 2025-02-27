@@ -101,9 +101,17 @@
   font-weight: 500;
 }
 
+.view-button:hover {
+  opacity: 0.8;
+}
+
 .view-button.active {
   background: #39587F;
   color: white;
+}
+
+.view-button.active:hover {
+  opacity: 0.9;
 }
 
 .selectors-wrapper {
@@ -152,13 +160,13 @@
 }
 
 .button-group button:first-child {
-  background: #333;
+  background: #39587F;
   color: white;
   flex: 1;
 }
 
 .button-group button:first-child:hover {
-  background: #444;
+  opacity: 0.9;
 }
 
 /* Mobile styles */

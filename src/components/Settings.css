@@ -79,7 +79,7 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-  background: #2c4160;
+  opacity: 0.9;
 }
 
 button[type="submit"]:disabled {

@@ -87,13 +87,17 @@
   font-size: 16px;
 }
 
+.menu-item:hover {
+  opacity: 0.8;
+}
+
 .menu-item.active {
   background: #f5f7fa;
   color: #39587F;
 }
 
-.menu-item:hover {
-  background: #f5f7fa;
+.menu-item.active:hover {
+  opacity: 0.9;
 }
 
 @keyframes fadeIn {
