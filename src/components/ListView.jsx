@@ -9,106 +9,81 @@ const ListView = ({ scheduleData, view, currentDate }) => {
     return '';
   };
 
-  const getWeekDates = () => {
-    const curr = new Date(currentDate);
-    const week = [];
-    
-    // Get the first day of the week
-    curr.setDate(curr.getDate() - curr.getDay() + 1);
-    
-    // Get current month
-    const currentMonth = currentDate.getMonth();
-    
+  const getDaysInWeek = (date) => {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay()); // Start from Sunday
+    const days = [];
     for (let i = 0; i < 7; i++) {
-      const date = new Date(curr);
-      // Only add the date if it's in the same month as currentDate
-      if (date.getMonth() === currentMonth) {
-        week.push(date);
-      }
-      curr.setDate(curr.getDate() + 1);
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      days.push(day);
     }
-    return week;
+    return days;
   };
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayName = days[date.getDay()];
+    const dayNum = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    return `${dayName}, ${month} ${dayNum}`;
   };
 
-  if (view === 'weekly') {
-    const weekDates = getWeekDates();
-    return (
-      <div className="list-view weekly-grid">
-        <div className="week-header">
-          {weekDates.map((date) => (
-            <div key={date.toISOString()} className="day-header">
-              {formatDate(date)}
-            </div>
-          ))}
-        </div>
-        <div className="week-content">
-          {weekDates.map((date) => {
-            const dayNumber = date.getDate();
-            const stations = scheduleData[dayNumber] || [];
-            
-            return (
-              <div 
-                key={date.toISOString()} 
-                className={`day-column ${
-                  date.toDateString() === currentDate.toDateString() ? 'today' : ''
-                }`}
-              >
-                {stations.length > 0 ? (
-                  <div className="stations-list-column">
-                    {stations.map((station, idx) => (
-                      <span 
-                        key={idx} 
-                        className={`station-tag ${getStationClass(station)}`}
-                      >
-                        {station}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="no-shift">No shift</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  const renderShifts = (date) => {
+    const dayData = scheduleData[date.getDate()];
+    if (!dayData || dayData.length === 0) {
+      return <div className="no-shift">No shift</div>;
+    }
 
-  if (view === 'daily') {
-    const today = currentDate.getDate();
-    const stations = scheduleData[today] || [];
+    return dayData.map((station, index) => (
+      <div key={index} className="shift-item">
+        {station}
+      </div>
+    ));
+  };
+
+  const renderWeeklyView = () => {
+    const weekDays = getDaysInWeek(currentDate);
     
     return (
-      <div className="list-view daily">
-        <h3>{formatDate(currentDate)}</h3>
-        {stations.length > 0 ? (
-          <div className="stations-list">
-            {stations.map((station, idx) => (
-              <span 
-                key={idx} 
-                className={`station-tag ${getStationClass(station)}`}
-              >
-                {station}
-              </span>
-            ))}
+      <div className="weekly-view">
+        {weekDays.map((day, index) => (
+          <div 
+            key={index} 
+            className={`day-card ${day.getDate() === currentDate.getDate() ? 'current-day' : ''}`}
+          >
+            <div className="date-header">
+              <span className="day-name">{formatDate(day)}</span>
+            </div>
+            <div className="shifts-container">
+              {renderShifts(day)}
+            </div>
           </div>
-        ) : (
-          <div className="no-shift">No shift scheduled for today</div>
-        )}
+        ))}
       </div>
     );
-  }
+  };
 
-  return null;
+  const renderDailyView = () => {
+    return (
+      <div className="daily-view">
+        <div className="day-card current-day">
+          <div className="date-header">
+            <span className="day-name">{formatDate(currentDate)}</span>
+          </div>
+          <div className="shifts-container">
+            {renderShifts(currentDate)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="list-view">
+      {view === 'weekly' ? renderWeeklyView() : renderDailyView()}
+    </div>
+  );
 };
 
 export default ListView;

@@ -1,8 +1,6 @@
 .messages-container {
   padding: 20px;
   max-width: 100%;
-  margin-left: 250px;
-  margin-right: 20px;
 }
 
 .messages-container h1 {
@@ -14,20 +12,22 @@
 .daily-messages-section {
   background: #ffffff;
   border-radius: 8px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin: 0 auto;
+  max-width: 800px;
 }
 
 .date-picker-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .date-controls {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .date-range-toggle {
@@ -38,16 +38,23 @@
   color: #333;
 }
 
+.date-range-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
 .date-inputs {
   display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .date-picker-wrapper {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .date-picker-wrapper label {
@@ -57,22 +64,22 @@
 
 /* Style the date picker inputs */
 .react-datepicker-wrapper {
-  width: auto;
+  width: 100%;
 }
 
 .react-datepicker__input-container input {
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
-  width: 200px;
 }
 
 .send-messages-button {
   background-color: #39587F;
   color: white;
   border: none;
-  padding: 1rem 2rem;
+  padding: 1rem;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
@@ -82,6 +89,7 @@
   box-shadow: 0 2px 4px rgba(57, 88, 127, 0.2);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-top: 1rem;
 }
 
 .send-messages-button:hover:not(:disabled) {
@@ -99,4 +107,56 @@
   background-color: #a0aec0;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+  .messages-container {
+    padding: 16px;
+    margin-left: 0;
+  }
+
+  .daily-messages-section {
+    padding: 1rem;
+    margin: 0;
+    border-radius: 12px;
+  }
+
+  .date-picker-wrapper {
+    margin-bottom: 0.5rem;
+  }
+
+  .react-datepicker__input-container input {
+    font-size: 16px; /* Prevents zoom on mobile */
+    padding: 12px;
+  }
+
+  .date-range-toggle {
+    font-size: 16px;
+    padding: 8px 0;
+  }
+
+  .send-messages-button {
+    margin-top: 1.5rem;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  /* Fix for date picker on mobile */
+  .react-datepicker-popper {
+    width: 100%;
+    max-width: 320px;
+    transform: none !important;
+    inset: auto !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    margin: 0 auto !important;
+    z-index: 1002 !important;
+  }
+
+  .react-datepicker {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+  }
 } 

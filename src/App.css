@@ -1,8 +1,94 @@
-.App {
+.app {
+  display: flex;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #f5f7fa;
 }
 
 .main-content {
+  flex: 1;
   padding: 20px;
+  margin-left: 250px; /* Space for sidebar */
+  transition: margin-left 0.3s ease;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .main-content.mobile {
+    margin-left: 0;
+    padding: 16px;
+    padding-bottom: 80px; /* Space for mobile navigation */
+  }
+
+  /* Responsive table styles */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Responsive form styles */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  /* Responsive button styles */
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  /* Responsive card styles */
+  .card {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive grid styles */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  /* Responsive text styles */
+  h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.main-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.main-content {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

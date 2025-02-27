@@ -1,81 +1,154 @@
-.calendar {
+.monthly-calendar {
+  width: 100%;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .calendar-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: #f8f9fa;
-  padding: 10px;
-  font-weight: 500;
+  background: #f5f7fa;
+  border-bottom: 1px solid #eee;
+}
+
+.weekday-header {
+  padding: 12px 8px;
   text-align: center;
+  font-weight: 500;
+  color: #39587F;
+  font-size: 14px;
 }
 
-.calendar-body {
-  padding: 10px;
-}
-
-.calendar-week {
+.calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-bottom: 5px;
+  gap: 1px;
+  background: #eee;
+  padding: 1px;
 }
 
 .calendar-day {
   aspect-ratio: 1;
-  border: 1px solid #eee;
-  padding: 5px;
+  background: white;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
   min-height: 100px;
+  position: relative;
 }
 
 .calendar-day.empty {
-  background: #f8f9fa;
-}
-
-.day-number {
-  font-weight: 500;
-  margin-bottom: 5px;
-}
-
-.stations {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.station-tag {
-  background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.duty-officer {
-  background-color: #b9dbff;
-  color: rgb(0, 0, 0);
-}
-
-.after-duty {
-  background-color: #fce7c1;  /* light orange */
-  color: black;
-}
-
-.vacation {
-  background-color: #bdebbd;  /* light green */
-  color: black;
+  background: #f9f9f9;
 }
 
 .calendar-day.today {
-  background-color: #f8f9fa;
-  border: 2px solid #007bff;
-  border-radius: 4px;
+  background: rgba(57, 88, 127, 0.05);
 }
 
 .calendar-day.today .day-number {
-  color: #007bff;
-  font-weight: bold;
+  background: #39587F;
+  color: white;
+}
+
+.day-number {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 4px;
+}
+
+.shifts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.shift-tag {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f5f7fa;
+  color: #39587F;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shift-tag.duty-officer {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.shift-tag.after-duty {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.shift-tag.vacation {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .monthly-calendar {
+    border-radius: 8px;
+    margin: 0;
+  }
+
+  .calendar-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .weekday-header {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .calendar-day {
+    min-height: 80px;
+    padding: 4px;
+  }
+
+  .day-number {
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .shifts-list {
+    gap: 2px;
+  }
+
+  .shift-tag {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+
+  /* Show more shifts indicator if there are hidden shifts */
+  .calendar-day.has-shifts .shifts-list {
+    position: relative;
+  }
+
+  .calendar-day.has-shifts .shifts-list::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(to bottom, transparent, white);
+    pointer-events: none;
+  }
 } 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchSheetData, updateSheetData } from '../services/sheetsService';
+import { updateSheetData } from '../services/sheetsService';
 import './Settings.css';
 
 const Settings = () => {
@@ -12,30 +12,10 @@ const Settings = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const validatePassword = (password) => {
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
-    if (!/\d/.test(password)) {
-      return 'Password must contain at least one number';
-    }
-    if (!/[a-zA-Z]/.test(password)) {
-      return 'Password must contain at least one letter';
-    }
-    return null;
-  };
-
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
-    // Validate new password
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
 
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
@@ -102,7 +82,7 @@ const Settings = () => {
           {error && <div className="error-message">{error}</div>}
           {success && <div className="success-message">{success}</div>}
           <button type="submit" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Password'}
+            Update Password
           </button>
         </form>
       </div>

@@ -11,15 +11,9 @@ const Employees = () => {
     const loadEmployees = async () => {
       try {
         const data = await fetchSheetData('employee_data');
-        // Map data according to the correct column structure
+        // Map data to only include first names
         const employeeData = data.slice(1).map(row => ({
-          firstName: row[0],
-          lastName: row[1],
-          email: row[2],
-          phoneNumber: row[3],
-          workerId: row[4],
-          userName: row[6],
-          role: row[7]
+          firstName: row[0]
         }));
         setEmployees(employeeData);
       } catch (err) {
@@ -50,24 +44,12 @@ const Employees = () => {
             <thead>
               <tr>
                 <th>First Name</th>
-                <th>Last Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Worker ID</th>
-                <th>Username</th>
-                <th>Role</th>
               </tr>
             </thead>
             <tbody>
               {employees.map((employee, index) => (
                 <tr key={index}>
                   <td>{employee.firstName}</td>
-                  <td>{employee.lastName}</td>
-                  <td>{employee.email}</td>
-                  <td>{employee.phoneNumber}</td>
-                  <td>{employee.workerId}</td>
-                  <td>{employee.userName}</td>
-                  <td>{employee.role}</td>
                 </tr>
               ))}
             </tbody>

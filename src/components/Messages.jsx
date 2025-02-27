@@ -11,18 +11,14 @@ const Messages = () => {
   const [showDateRange, setShowDateRange] = useState(false);
   const [messageTemplate, setMessageTemplate] = useState('');
   const [scheduleData, setScheduleData] = useState(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   useEffect(() => {
     const fetchMessageTemplate = async () => {
       try {
         const data = await fetchSheetData('DATA');
-        
-        // Get message template from N2 (index [1][13])
         const template = data[1]?.[13] || 'Default message template';
-
-        
         setMessageTemplate(template);
-        
       } catch (err) {
         console.error('Error fetching message template:', err);
         setMessageTemplate('Default message template');
@@ -45,22 +41,17 @@ const Messages = () => {
 
   const fetchScheduleForDate = async (date) => {
     try {
-      // Get the correct sheet name based on the selected date
       const monthNumber = date.getMonth() + 1;
       const year = date.getFullYear();
       const sheetName = `${monthNumber}-${year}`;
       
-      console.log('Fetching sheet:', sheetName);
       const data = await fetchSheetData(sheetName);
       
       if (!data || data.length < 6) {
         throw new Error('No schedule data available');
       }
 
-      // Get station names from row 4
       const stationNames = data[3] || [];
-      
-      // Get the specific day's data (row is day number + 4)
       const dayNumber = date.getDate();
       const dayRow = data[dayNumber + 4];
       
@@ -68,7 +59,6 @@ const Messages = () => {
         throw new Error('No data for selected date');
       }
 
-      // Function to find all people for a specific station
       const findPeopleForStation = (stationType) => {
         const people = [];
         stationNames.forEach((station, index) => {
@@ -79,8 +69,7 @@ const Messages = () => {
         return people.length > 0 ? people.join(', ') : 'לא נקבע';
       };
 
-      // Find people for each station type
-      const schedule = {
+      return {
         carmelSide: findPeopleForStation('צד כרמל'),
         carmelDoctor: findPeopleForStation('א. צד-כרמל'),
         yamSide: findPeopleForStation('צד ים'),
@@ -88,9 +77,6 @@ const Messages = () => {
         dayHospitalization: findPeopleForStation('אשפוז יום'),
         triage: findPeopleForStation('מיון')
       };
-
-      console.log('Found schedule:', schedule);
-      return schedule;
 
     } catch (err) {
       console.error('Error fetching schedule:', err);
@@ -105,34 +91,16 @@ const Messages = () => {
     }
   };
 
-  const findPersonByColumn = (dayRow, columnIndex) => {
-    return dayRow[columnIndex] || 'לא נקבע';
-  };
-
-  const sendWhatsAppMessage = (phoneNumber, message) => {
-    try {
-      // Create a temporary textarea element
-      const textarea = document.createElement('textarea');
-      textarea.value = message;
-      document.body.appendChild(textarea);
-      
-      // Copy the message to clipboard
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      
-      // Alert the user in Hebrew
-      alert('הטקסט הועתק ללוח בהצלחה! אפשר להדביק אותו בוואטסאפ.');
-
-    } catch (err) {
-      console.error('Error copying message:', err);
-      alert('שגיאה בהעתקת ההודעה. אנא נסו שוב.');
+  const handleDateChange = (date, isStart = true) => {
+    if (isStart) {
+      setStartDate(date);
+      if (endDate && date > endDate) {
+        setEndDate(null);
+      }
+    } else {
+      setEndDate(date);
     }
-  };
-
-  const sendEmail = (email, subject, message) => {
-    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-    window.location.href = mailtoUrl;
+    setDatePickerOpen(false);
   };
 
   const handleSendDailyMessages = async () => {
@@ -140,14 +108,10 @@ const Messages = () => {
       setLoading(true);
       let finalMessage = '';
 
-      // If showing date range, get messages for all dates in range
       if (showDateRange && endDate) {
-        // Generate array of all dates in the range
         const dates = [];
         let currentDate = new Date(startDate);
         const lastDate = new Date(endDate);
-        
-        // Add one day to endDate for inclusive comparison
         lastDate.setDate(lastDate.getDate() + 1);
         
         while (currentDate < lastDate) {
@@ -155,12 +119,10 @@ const Messages = () => {
           currentDate.setDate(currentDate.getDate() + 1);
         }
 
-        // Process each date in the range
         for (let i = 0; i < dates.length; i++) {
           const date = dates[i];
           const schedule = await fetchScheduleForDate(date);
           
-          // Add RTL mark only to the first message
           let dateMessage = (i === 0 ? '\u200F' : '') + messageTemplate
             .replace(/\\n/g, '\n')
             .replace(/{dayInHebrew}/g, getDayInHebrew(date))
@@ -172,12 +134,9 @@ const Messages = () => {
             .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
             .replace(/{triage}/g, schedule.triage);
 
-          // Add to final message with triple line breaks between days
           finalMessage += dateMessage + (i < dates.length - 1 ? '\n\n\n' : '');
         }
-
       } else {
-        // Single date message
         const schedule = await fetchScheduleForDate(startDate);
         finalMessage = '\u200F' + messageTemplate
           .replace(/\\n/g, '\n')
@@ -191,8 +150,14 @@ const Messages = () => {
           .replace(/{triage}/g, schedule.triage);
       }
 
-      // Copy message directly without asking for platform choice
-      sendWhatsAppMessage(null, finalMessage);
+      const textarea = document.createElement('textarea');
+      textarea.value = finalMessage;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      alert('הטקסט הועתק ללוח בהצלחה! אפשר להדביק אותו בוואטסאפ.');
 
     } catch (err) {
       console.error('Error sending messages:', err);
@@ -226,12 +191,15 @@ const Messages = () => {
                 <label>Start Date:</label>
                 <DatePicker
                   selected={startDate}
-                  onChange={(date) => setStartDate(date)}
+                  onChange={(date) => handleDateChange(date, true)}
                   selectsStart
                   startDate={startDate}
                   endDate={endDate}
                   dateFormat="MMMM d, yyyy"
                   placeholderText="Select start date"
+                  onCalendarOpen={() => setDatePickerOpen(true)}
+                  onCalendarClose={() => setDatePickerOpen(false)}
+                  withPortal={window.innerWidth <= 768}
                 />
               </div>
               
@@ -240,13 +208,16 @@ const Messages = () => {
                   <label>End Date:</label>
                   <DatePicker
                     selected={endDate}
-                    onChange={(date) => setEndDate(date)}
+                    onChange={(date) => handleDateChange(date, false)}
                     selectsEnd
                     startDate={startDate}
                     endDate={endDate}
                     minDate={startDate}
                     dateFormat="MMMM d, yyyy"
                     placeholderText="Select end date"
+                    onCalendarOpen={() => setDatePickerOpen(true)}
+                    onCalendarClose={() => setDatePickerOpen(false)}
+                    withPortal={window.innerWidth <= 768}
                   />
                 </div>
               )}
@@ -256,9 +227,9 @@ const Messages = () => {
           <button 
             className="send-messages-button"
             onClick={handleSendDailyMessages}
-            disabled={loading || !startDate}
+            disabled={loading || !startDate || (showDateRange && !endDate)}
           >
-            {loading ? 'Sending...' : 'Copy Messages To Clipboard'}
+            {loading ? 'Processing...' : 'Copy Messages To Clipboard'}
           </button>
         </div>
       </div>

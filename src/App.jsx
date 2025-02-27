@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Employees from './components/Employees';
@@ -7,12 +7,23 @@ import Schedule from './components/Schedule';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import Messages from './components/Messages';
+import MobileNavigation from './components/MobileNavigation';
 import './App.css';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('user');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isManager = user.role?.toLowerCase() === 'manager';
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Redirect non-managers trying to access restricted routes
   const ManagerRoute = ({ children }) => {
@@ -31,8 +42,8 @@ function App() {
           element={
             isAuthenticated ? (
               <div className="app">
-                <Sidebar />
-                <main className="main-content">
+                {!isMobile && <Sidebar />}
+                <main className={`main-content ${isMobile ? 'mobile' : ''}`}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route 
@@ -55,6 +66,7 @@ function App() {
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </main>
+                {isMobile && <MobileNavigation isManager={isManager} />}
               </div>
             ) : (
               <Navigate to="/login" />
