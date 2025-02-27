@@ -4,7 +4,21 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configure CORS with specific origins
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',  // Local development
+    'http://localhost:3000',  // Local production build
+    'https://shiftopia.netlify.app',  // Your Netlify domain
+    /\.netlify\.app$/,  // Any Netlify subdomain
+    /\.netlify\.live$/  // Netlify deploy previews
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Function to properly format the private key
