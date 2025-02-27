@@ -10,7 +10,8 @@ const corsOptions = {
   origin: [
     'http://localhost:5173',  // Local development
     'http://localhost:3000',  // Local production build
-    'https://shiftopia.netlify.app',  // Your Netlify domain
+    'https://shiftopia.netlify.app',  // Main Netlify domain
+    'https://shiftopia-app.netlify.app', // Alternative Netlify domain
     /\.netlify\.app$/,  // Any Netlify subdomain
     /\.netlify\.live$/  // Netlify deploy previews
   ],
