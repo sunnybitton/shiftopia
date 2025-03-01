@@ -1,0 +1,12 @@
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  width: 100%;
+}
+
+/* When used as a full page loader */
+.loading-container.full-page {
+  min-height: calc(100vh - 200px);
+} 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fetchSheetData, exportSheetToPDF } from '../services/sheetsService';
+import Loading from './Loading';
 import './Schedule.css';
 import MonthlyCalendar from './MonthlyCalendar';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -245,7 +246,11 @@ const Schedule = () => {
   }, [activeTab, currentMonthName, currentYear]); // Add dependencies
 
   if (loading) {
-    return <div className="schedule">Loading...</div>;
+    return (
+      <div className="schedule">
+        <Loading size={60} />
+      </div>
+    );
   }
 
   if (error) {
