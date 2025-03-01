@@ -1,0 +1,84 @@
+.daily-schedule-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.daily-schedule-card h3 {
+  color: #333;
+  font-size: 18px;
+  margin: 0 0 16px 0;
+  font-weight: 500;
+}
+
+.schedule-content {
+  min-height: 60px;
+}
+
+.assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignment-tag {
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f5f7fa;
+  color: #39587F;
+  font-weight: 500;
+}
+
+.assignment-tag.duty-officer {
+  background: #e8f4ff;
+  color: #1565c0;
+}
+
+.assignment-tag.after-duty {
+  background: #fff4e5;
+  color: #e65100;
+}
+
+.assignment-tag.vacation {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.no-assignments {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 12px;
+}
+
+.loading-text, .error-text {
+  color: #666;
+  text-align: center;
+  padding: 12px;
+}
+
+.error-text {
+  color: #dc3545;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .daily-schedule-card {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  .daily-schedule-card h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .assignment-tag {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+} 
