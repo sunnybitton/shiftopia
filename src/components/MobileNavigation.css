@@ -19,12 +19,16 @@
   justify-content: center;
   padding: 8px;
   border: none;
-  background: none;
+  background: transparent !important;
   color: #666;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
   flex: 1;
   max-width: 100px;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .nav-item span {
@@ -34,10 +38,22 @@
 
 .nav-item.active {
   color: #39587F;
+  background: transparent !important;
 }
 
 .nav-item:hover {
-  color: #ffffff;
+  color: #39587F;
+  background: transparent !important;
+}
+
+.nav-item:active {
+  color: #39587F;
+  background: transparent !important;
+}
+
+.nav-item:focus {
+  outline: none;
+  background: transparent !important;
 }
 
 .mobile-menu-overlay {
