@@ -248,7 +248,7 @@ const Schedule = () => {
   if (loading) {
     return (
       <div className="schedule">
-        <Loading size={60} />
+        <Loading size={120} />
       </div>
     );
   }

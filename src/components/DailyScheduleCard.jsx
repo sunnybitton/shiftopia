@@ -63,7 +63,7 @@ const DailyScheduleCard = ({ date, title }) => {
     return (
       <div className="daily-schedule-card loading">
         <h3>{title}</h3>
-        <Loading size={40} />
+        <Loading size={80} />
       </div>
     );
   }

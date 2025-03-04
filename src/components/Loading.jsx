@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import appLogo from '../assets/app_logo.svg';
 import './Loading.css';
 
-const Loading = ({ size = 50, color = "#39587F" }) => {
+const Loading = ({ size = 100, color = "#39587F" }) => {
   useEffect(() => {
     // Load the Lordicon script if it hasn't been loaded yet
     if (!document.querySelector('script[src="https://cdn.lordicon.com/lordicon.js"]')) {
@@ -12,6 +12,9 @@ const Loading = ({ size = 50, color = "#39587F" }) => {
       document.body.appendChild(script);
     }
   }, []);
+
+  // Calculate animation size (slightly smaller than the logo)
+  const animationSize = Math.round(size * 0.8);
 
   return (
     <div className="loading-container">
@@ -30,8 +33,8 @@ const Loading = ({ size = 50, color = "#39587F" }) => {
         delay="0"
         colors={`primary:${color}`}
         style={{
-          width: `${size}px`,
-          height: `${size}px`,
+          width: `${animationSize}px`,
+          height: `${animationSize}px`,
           position: 'absolute'
         }}
       />
