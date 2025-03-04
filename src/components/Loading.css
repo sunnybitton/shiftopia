@@ -4,6 +4,24 @@
   align-items: center;
   min-height: 100px;
   width: 100%;
+  position: relative;
+}
+
+.loading-logo {
+  opacity: 0.15;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.15;
+  }
 }
 
 /* When used as a full page loader */

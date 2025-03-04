@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import appLogo from '../assets/app_logo.svg';
 import './Loading.css';
 
 const Loading = ({ size = 50, color = "#39587F" }) => {
@@ -14,6 +15,15 @@ const Loading = ({ size = 50, color = "#39587F" }) => {
 
   return (
     <div className="loading-container">
+      <img 
+        src={appLogo} 
+        alt="Shiftopia Logo"
+        className="loading-logo"
+        style={{
+          width: `${size}px`,
+          height: `${size}px`
+        }}
+      />
       <lord-icon
         src="https://cdn.lordicon.com/abfverha.json"
         trigger="loop"
@@ -21,7 +31,8 @@ const Loading = ({ size = 50, color = "#39587F" }) => {
         colors={`primary:${color}`}
         style={{
           width: `${size}px`,
-          height: `${size}px`
+          height: `${size}px`,
+          position: 'absolute'
         }}
       />
     </div>
