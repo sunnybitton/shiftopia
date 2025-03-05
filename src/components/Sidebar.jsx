@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
+import appLogo from '../assets/app_logo.svg';
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="logo-container">
-        <img src="/src/assets/logo_text.png" alt="Logo" className="logo" />
+        <img src={appLogo} alt="Shiftopia Logo" className="logo" />
       </div>
       <nav className="sidebar-nav">
         <ul>
