@@ -1,5 +1,5 @@
 .sidebar {
-  width: 300px;
+  width: 250px;
   height: 100vh;
   background-color: #99BED5;
   position: fixed;
@@ -12,13 +12,13 @@
 }
 
 .logo-container {
-  padding: 20px;
+  padding: 12px;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .logo {
-  width: 240px;
+  width: 180px;
   height: auto;
 }
 

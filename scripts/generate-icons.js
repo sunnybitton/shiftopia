@@ -16,8 +16,8 @@ const ICONS = [
   { size: 152, name: 'apple-icon-152x152.png' },
   { size: 167, name: 'apple-icon-167x167.png' },
   { size: 180, name: 'apple-icon-180x180.png' },
-  { size: 192, name: 'android-icon-192x192.png' },
-  { size: 512, name: 'android-icon-512x512.png' },
+  { size: 384, name: 'android-icon-192x192.png' },
+  { size: 1024, name: 'android-icon-512x512.png' },
 ];
 
 const SPLASH_SCREENS = [
