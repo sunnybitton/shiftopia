@@ -32,11 +32,7 @@ const SPLASH_SCREENS = [
 async function generateIcons() {
   for (const icon of ICONS) {
     const outputPath = path.join(ICONS_DIR, icon.name);
-    // Use different padding and size for favicons vs other icons
-    const padding = icon.isFavicon ? Math.round(icon.size * 0.05) : Math.round(icon.size * 0.1); // 5% padding for favicon, 10% for others
-    const logoSize = icon.isFavicon ? Math.round(icon.size * 0.9) : Math.round(icon.size * 0.8); // 90% size for favicon, 80% for others
-    const sourceFile = icon.isFavicon ? FAVICON_SOURCE : SOURCE_LOGO;
-
+    
     // Create a white background
     const background = await sharp({
       create: {
@@ -47,23 +43,24 @@ async function generateIcons() {
       }
     }).png().toBuffer();
 
-    // Resize the logo with padding and composite onto the background
-    await sharp(sourceFile)
+    // Use mobile_app_logo.svg for all icons, with 100% size for favicons and 80% for others
+    const logoSize = icon.isFavicon ? icon.size : Math.round(icon.size * 0.8);
+    
+    // Resize the logo with padding
+    const logo = await sharp(FAVICON_SOURCE) // Always use FAVICON_SOURCE (mobile_app_logo.svg)
       .resize(logoSize, logoSize, {
         fit: 'contain',
         background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
-      .toBuffer()
-      .then(async (logo) => {
-        await sharp(background)
-          .composite([{
-            input: logo,
-            top: Math.round((icon.size - logoSize) / 2),
-            left: Math.round((icon.size - logoSize) / 2)
-          }])
-          .png()
-          .toFile(outputPath);
-      });
+      .toBuffer();
+
+    // Composite the logo onto the center of the background
+    await sharp(background)
+      .composite([{
+        input: logo,
+        gravity: 'center'
+      }])
+      .toFile(outputPath);
 
     console.log(`Generated ${icon.name}`);
   }
