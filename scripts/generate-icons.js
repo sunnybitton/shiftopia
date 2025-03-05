@@ -1,19 +1,24 @@
-const sharp = require('sharp');
-const fs = require('fs').promises;
-const path = require('path');
+import sharp from 'sharp';
+import { promises as fs } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const ICONS_DIR = path.join(__dirname, '../src/assets/icons');
-const SPLASH_DIR = path.join(__dirname, '../src/assets/splash');
-const SOURCE_LOGO = path.join(__dirname, '../src/assets/app_logo.svg');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const ICONS_DIR = join(__dirname, '../src/assets/icons');
+const SPLASH_DIR = join(__dirname, '../src/assets/splash');
+const SOURCE_LOGO = join(__dirname, '../src/assets/app_logo.svg');
 
 const ICONS = [
   { size: 16, name: 'favicon-16x16.png' },
   { size: 32, name: 'favicon-32x32.png' },
-  { size: 152, name: 'apple-icon-152x152.png' },
-  { size: 167, name: 'apple-icon-167x167.png' },
-  { size: 180, name: 'apple-icon-180x180.png' },
-  { size: 192, name: 'android-icon-192x192.png' },
-  { size: 512, name: 'android-icon-512x512.png' },
+  { size: 180, name: 'apple-icon-152x152.png' },
+  { size: 200, name: 'apple-icon-167x167.png' },
+  { size: 220, name: 'apple-icon-180x180.png' },
+  { size: 256, name: 'android-icon-192x192.png' },
+  { size: 1024, name: 'android-icon-512x512.png' },
 ];
 
 const SPLASH_SCREENS = [
@@ -40,7 +45,7 @@ async function generateIcons() {
         background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
       .png()
-      .toFile(path.join(ICONS_DIR, icon.name));
+      .toFile(join(ICONS_DIR, icon.name));
     
     console.log(`Generated ${icon.name}`);
   }
@@ -50,8 +55,8 @@ async function generateSplashScreens() {
   await ensureDirectoryExists(SPLASH_DIR);
   
   for (const screen of SPLASH_SCREENS) {
-    // Calculate logo size (40% of the smaller dimension)
-    const logoSize = Math.min(screen.width, screen.height) * 0.4;
+    // Calculate logo size (60% of the smaller dimension)
+    const logoSize = Math.min(screen.width, screen.height) * 0.6;
     
     // Create a white background
     const image = sharp({
@@ -78,7 +83,7 @@ async function generateSplashScreens() {
         gravity: 'center'
       }])
       .png()
-      .toFile(path.join(SPLASH_DIR, screen.name));
+      .toFile(join(SPLASH_DIR, screen.name));
     
     console.log(`Generated ${screen.name}`);
   }
