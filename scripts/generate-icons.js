@@ -3,12 +3,14 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const ICONS_DIR = 'src/assets/icons';
+const PUBLIC_DIR = 'public';
 const SPLASH_DIR = 'src/assets/splash';
 const SOURCE_LOGO = 'src/assets/logo_only.svg';
 
 // Ensure the output directories exist
 await fs.mkdir(ICONS_DIR, { recursive: true });
 await fs.mkdir(SPLASH_DIR, { recursive: true });
+await fs.mkdir(PUBLIC_DIR, { recursive: true });
 
 const ICONS = [
   { size: 16, name: 'favicon-16x16.png' },
@@ -101,7 +103,18 @@ async function generateSplashScreens() {
   }
 }
 
+async function copyAndroidIconsToPublic() {
+  const androidIcons = ['android-icon-192x192.png', 'android-icon-512x512.png'];
+  for (const iconName of androidIcons) {
+    const sourcePath = path.join(ICONS_DIR, iconName);
+    const targetPath = path.join(PUBLIC_DIR, iconName);
+    await fs.copyFile(sourcePath, targetPath);
+    console.log(`Copied ${iconName} to public folder`);
+  }
+}
+
 // Generate all assets
 await generateIcons();
 await generateSplashScreens();
+await copyAndroidIconsToPublic();
 console.log('All assets generated successfully!'); 
