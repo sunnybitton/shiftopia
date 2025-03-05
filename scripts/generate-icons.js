@@ -14,11 +14,11 @@ const SOURCE_LOGO = join(__dirname, '../src/assets/app_logo.svg');
 const ICONS = [
   { size: 16, name: 'favicon-16x16.png' },
   { size: 32, name: 'favicon-32x32.png' },
-  { size: 180, name: 'apple-icon-152x152.png' },
-  { size: 200, name: 'apple-icon-167x167.png' },
-  { size: 220, name: 'apple-icon-180x180.png' },
-  { size: 256, name: 'android-icon-192x192.png' },
-  { size: 1024, name: 'android-icon-512x512.png' },
+  { size: 152, name: 'apple-icon-152x152.png' },
+  { size: 167, name: 'apple-icon-167x167.png' },
+  { size: 180, name: 'apple-icon-180x180.png' },
+  { size: 192, name: 'android-icon-192x192.png' },
+  { size: 512, name: 'android-icon-512x512.png' },
 ];
 
 const SPLASH_SCREENS = [
@@ -39,11 +39,33 @@ async function generateIcons() {
   await ensureDirectoryExists(ICONS_DIR);
   
   for (const icon of ICONS) {
-    await sharp(SOURCE_LOGO)
-      .resize(icon.size, icon.size, {
+    // Calculate the logo size (80% of the icon size to add padding)
+    const logoSize = Math.round(icon.size * 0.8);
+    
+    // Create a white background
+    const image = sharp({
+      create: {
+        width: icon.size,
+        height: icon.size,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      }
+    });
+
+    // Resize the logo with padding
+    const logo = await sharp(SOURCE_LOGO)
+      .resize(logoSize, logoSize, {
         fit: 'contain',
         background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
+      .toBuffer();
+
+    // Composite the logo onto the center of the background
+    await image
+      .composite([{
+        input: logo,
+        gravity: 'center'
+      }])
       .png()
       .toFile(join(ICONS_DIR, icon.name));
     
