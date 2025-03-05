@@ -3,6 +3,19 @@
   max-width: 100%;
 }
 
+.dashboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.dashboard-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
 .dashboard h1 {
   color: #333;
   font-size: 24px;
@@ -38,6 +51,11 @@
   .dashboard {
     padding: 16px;
     padding-bottom: 80px;
+  }
+
+  .dashboard-logo {
+    width: 100px;
+    margin-bottom: 16px;
   }
 
   .dashboard h1 {

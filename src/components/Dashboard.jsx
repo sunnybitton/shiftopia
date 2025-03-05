@@ -1,6 +1,7 @@
 import React from 'react';
 import DailyScheduleCard from './DailyScheduleCard';
 import './Dashboard.css';
+import appLogo from '../assets/app_logo.svg';
 
 const Dashboard = () => {
   // Get user data from localStorage
@@ -16,9 +17,12 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <h2 className="greeting">Hello, {fullName}</h2>
-      <h1>Welcome to Shiftopia</h1>
-      <p>Your one-stop solution for shift management</p>
+      <div className="dashboard-header">
+        <img src={appLogo} alt="Shiftopia Logo" className="dashboard-logo" />
+        <h2 className="greeting">Hello, {fullName}</h2>
+        <h1>Welcome to Shiftopia</h1>
+        <p>Your one-stop solution for shift management</p>
+      </div>
       
       <div className="daily-schedules">
         <DailyScheduleCard 
