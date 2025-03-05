@@ -1,15 +1,14 @@
 import sharp from 'sharp';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import fs from 'fs/promises';
+import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const ICONS_DIR = 'src/assets/icons';
+const SPLASH_DIR = 'src/assets/splash';
+const SOURCE_LOGO = 'src/assets/logo_only.svg';
 
-const ICONS_DIR = join(__dirname, '../src/assets/icons');
-const SPLASH_DIR = join(__dirname, '../src/assets/splash');
-const SOURCE_LOGO = join(__dirname, '../src/assets/app_logo.svg');
+// Ensure the output directories exist
+await fs.mkdir(ICONS_DIR, { recursive: true });
+await fs.mkdir(SPLASH_DIR, { recursive: true });
 
 const ICONS = [
   { size: 16, name: 'favicon-16x16.png' },
@@ -22,104 +21,87 @@ const ICONS = [
 ];
 
 const SPLASH_SCREENS = [
-  { width: 1125, height: 2436, name: 'apple-splash-1125x2436.png' },
-  { width: 750, height: 1334, name: 'apple-splash-750x1334.png' },
-  { width: 1242, height: 2208, name: 'apple-splash-1242x2208.png' },
+  { width: 1125, height: 2436 },
+  { width: 750, height: 1334 },
+  { width: 1242, height: 2208 }
 ];
 
-async function ensureDirectoryExists(dir) {
-  try {
-    await fs.mkdir(dir, { recursive: true });
-  } catch (err) {
-    if (err.code !== 'EEXIST') throw err;
-  }
-}
-
 async function generateIcons() {
-  await ensureDirectoryExists(ICONS_DIR);
-  
   for (const icon of ICONS) {
-    // Calculate the logo size (80% of the icon size to add padding)
-    const logoSize = Math.round(icon.size * 0.8);
-    
+    const outputPath = path.join(ICONS_DIR, icon.name);
+    const padding = Math.round(icon.size * 0.1); // 10% padding
+    const logoSize = Math.round(icon.size * 0.8); // Logo takes up 80% of the space
+
     // Create a white background
-    const image = sharp({
+    const background = await sharp({
       create: {
         width: icon.size,
         height: icon.size,
         channels: 4,
         background: { r: 255, g: 255, b: 255, alpha: 1 }
       }
-    });
+    }).png().toBuffer();
 
-    // Resize the logo with padding
-    const logo = await sharp(SOURCE_LOGO)
+    // Resize the logo with padding and composite onto the background
+    await sharp(SOURCE_LOGO)
       .resize(logoSize, logoSize, {
         fit: 'contain',
         background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
-      .toBuffer();
+      .toBuffer()
+      .then(async (logo) => {
+        await sharp(background)
+          .composite([{
+            input: logo,
+            top: Math.round((icon.size - logoSize) / 2),
+            left: Math.round((icon.size - logoSize) / 2)
+          }])
+          .png()
+          .toFile(outputPath);
+      });
 
-    // Composite the logo onto the center of the background
-    await image
-      .composite([{
-        input: logo,
-        gravity: 'center'
-      }])
-      .png()
-      .toFile(join(ICONS_DIR, icon.name));
-    
     console.log(`Generated ${icon.name}`);
   }
 }
 
 async function generateSplashScreens() {
-  await ensureDirectoryExists(SPLASH_DIR);
-  
   for (const screen of SPLASH_SCREENS) {
-    // Calculate logo size (60% of the smaller dimension)
-    const logoSize = Math.min(screen.width, screen.height) * 0.6;
-    
+    const outputPath = path.join(SPLASH_DIR, `apple-splash-${screen.width}x${screen.height}.png`);
+    const logoSize = Math.min(screen.width, screen.height) * 0.6; // Logo takes up 60% of the smaller dimension
+
     // Create a white background
-    const image = sharp({
+    const background = await sharp({
       create: {
         width: screen.width,
         height: screen.height,
         channels: 4,
         background: { r: 255, g: 255, b: 255, alpha: 1 }
       }
-    });
+    }).png().toBuffer();
 
-    // Resize the logo
-    const logo = await sharp(SOURCE_LOGO)
+    // Resize the logo and composite onto the background
+    await sharp(SOURCE_LOGO)
       .resize(Math.round(logoSize), Math.round(logoSize), {
         fit: 'contain',
         background: { r: 255, g: 255, b: 255, alpha: 0 }
       })
-      .toBuffer();
+      .toBuffer()
+      .then(async (logo) => {
+        await sharp(background)
+          .composite([{
+            input: logo,
+            top: Math.round((screen.height - logoSize) / 2),
+            left: Math.round((screen.width - logoSize) / 2)
+          }])
+          .png()
+          .toFile(outputPath);
+      });
 
-    // Composite the logo onto the center of the background
-    await image
-      .composite([{
-        input: logo,
-        gravity: 'center'
-      }])
-      .png()
-      .toFile(join(SPLASH_DIR, screen.name));
-    
-    console.log(`Generated ${screen.name}`);
+    console.log(`Generated splash screen ${screen.width}x${screen.height}`);
   }
 }
 
-async function main() {
-  try {
-    await generateIcons();
-    await generateSplashScreens();
-    console.log('All assets generated successfully!');
-  } catch (err) {
-    console.error('Error generating assets:', err);
-    process.exit(1);
-  }
-}
-
-main(); 
+// Generate all assets
+await generateIcons();
+await generateSplashScreens();
+console.log('All assets generated successfully!'); 
