@@ -1,7 +1,7 @@
 import React from 'react';
 import DailyScheduleCard from './DailyScheduleCard';
 import './Dashboard.css';
-import appLogo from '../assets/app_logo.svg';
+import appLogo from '../assets/mobile_app_logo.svg';
 
 const Dashboard = () => {
   // Get user data from localStorage
