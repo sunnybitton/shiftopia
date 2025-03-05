@@ -2,20 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/src/assets/mobile_app_logo.svg" />
-    <!-- Standard favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/mobile_app_logo.svg" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/src/assets/mobile_app_logo.svg" />
+    
+    <!-- Standard favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/src/assets/icons/favicon-16x16.png" />
+    
+    <!-- iOS splash screens -->
+    <!-- iPhone X (1125px x 2436px) -->
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="/src/assets/splash/apple-splash-1125x2436.png" />
+    <!-- iPhone 8, 7, 6s, 6 (750px x 1334px) -->
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="/src/assets/splash/apple-splash-750x1334.png" />
+    <!-- iPhone 8 Plus, 7 Plus, 6s Plus, 6 Plus (1242px x 2208px) -->
+    <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" href="/src/assets/splash/apple-splash-1242x2208.png" />
     
     <!-- iOS icons -->
-    <link rel="apple-touch-icon" href="/src/assets/mobile_app_logo.svg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/src/assets/mobile_app_logo.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/src/assets/mobile_app_logo.svg" />
-    <link rel="apple-touch-icon" sizes="167x167" href="/src/assets/mobile_app_logo.svg" />
+    <link rel="apple-touch-icon" href="/src/assets/icons/apple-icon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/src/assets/icons/apple-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/src/assets/icons/apple-icon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/src/assets/icons/apple-icon-167x167.png" />
     
     <!-- Android icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/src/assets/mobile_app_logo.svg" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/src/assets/mobile_app_logo.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/src/assets/icons/android-icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/src/assets/icons/android-icon-512x512.png" />
     
     <!-- PWA meta tags -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -25,7 +35,11 @@
     <meta name="application-name" content="Shiftopia" />
     <meta name="theme-color" content="#39587F" />
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Splash screen meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Shiftopia</title>
   </head>
   <body>
