@@ -11,9 +11,9 @@
 }
 
 .dashboard-logo {
-  width: 200px;
+  width: 400px;
   height: auto;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .dashboard h1 {
@@ -54,8 +54,8 @@
   }
 
   .dashboard-logo {
-    width: 160px;
-    margin-bottom: 16px;
+    width: 280px;
+    margin-bottom: 24px;
   }
 
   .dashboard h1 {
