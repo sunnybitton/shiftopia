@@ -32,8 +32,9 @@ const SPLASH_SCREENS = [
 async function generateIcons() {
   for (const icon of ICONS) {
     const outputPath = path.join(ICONS_DIR, icon.name);
-    const padding = Math.round(icon.size * 0.1); // 10% padding
-    const logoSize = Math.round(icon.size * 0.8); // Logo takes up 80% of the space
+    // Use different padding and size for favicons vs other icons
+    const padding = icon.isFavicon ? Math.round(icon.size * 0.05) : Math.round(icon.size * 0.1); // 5% padding for favicon, 10% for others
+    const logoSize = icon.isFavicon ? Math.round(icon.size * 0.9) : Math.round(icon.size * 0.8); // 90% size for favicon, 80% for others
     const sourceFile = icon.isFavicon ? FAVICON_SOURCE : SOURCE_LOGO;
 
     // Create a white background
