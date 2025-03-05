@@ -6,6 +6,7 @@ const ICONS_DIR = 'src/assets/icons';
 const PUBLIC_DIR = 'public';
 const SPLASH_DIR = 'src/assets/splash';
 const SOURCE_LOGO = 'src/assets/logo_only.svg';
+const FAVICON_SOURCE = 'src/assets/mobile_app_logo.svg';
 
 // Ensure the output directories exist
 await fs.mkdir(ICONS_DIR, { recursive: true });
@@ -13,8 +14,8 @@ await fs.mkdir(SPLASH_DIR, { recursive: true });
 await fs.mkdir(PUBLIC_DIR, { recursive: true });
 
 const ICONS = [
-  { size: 16, name: 'favicon-16x16.png' },
-  { size: 32, name: 'favicon-32x32.png' },
+  { size: 16, name: 'favicon-16x16.png', isFavicon: true },
+  { size: 32, name: 'favicon-32x32.png', isFavicon: true },
   { size: 152, name: 'apple-icon-152x152.png' },
   { size: 167, name: 'apple-icon-167x167.png' },
   { size: 180, name: 'apple-icon-180x180.png' },
@@ -33,6 +34,7 @@ async function generateIcons() {
     const outputPath = path.join(ICONS_DIR, icon.name);
     const padding = Math.round(icon.size * 0.1); // 10% padding
     const logoSize = Math.round(icon.size * 0.8); // Logo takes up 80% of the space
+    const sourceFile = icon.isFavicon ? FAVICON_SOURCE : SOURCE_LOGO;
 
     // Create a white background
     const background = await sharp({
@@ -45,7 +47,7 @@ async function generateIcons() {
     }).png().toBuffer();
 
     // Resize the logo with padding and composite onto the background
-    await sharp(SOURCE_LOGO)
+    await sharp(sourceFile)
       .resize(logoSize, logoSize, {
         fit: 'contain',
         background: { r: 255, g: 255, b: 255, alpha: 0 }
