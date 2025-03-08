@@ -10,6 +10,7 @@ const Messages = () => {
   const [endDate, setEndDate] = useState(null);
   const [showDateRange, setShowDateRange] = useState(false);
   const [messageTemplate, setMessageTemplate] = useState('');
+  const [messagePreview, setMessagePreview] = useState('');
   const [scheduleData, setScheduleData] = useState(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
@@ -27,6 +28,63 @@ const Messages = () => {
 
     fetchMessageTemplate();
   }, []);
+
+  useEffect(() => {
+    const updatePreview = async () => {
+      try {
+        let previewMessage = '';
+        
+        if (showDateRange && endDate) {
+          const dates = [];
+          let currentDate = new Date(startDate);
+          const lastDate = new Date(endDate);
+          lastDate.setDate(lastDate.getDate() + 1);
+          
+          while (currentDate < lastDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          for (let i = 0; i < dates.length; i++) {
+            const date = dates[i];
+            const schedule = await fetchScheduleForDate(date);
+            
+            let dateMessage = (i === 0 ? '\u200F' : '') + messageTemplate
+              .replace(/\\n/g, '\n')
+              .replace(/{dayInHebrew}/g, getDayInHebrew(date))
+              .replace(/{date}/g, formatDateDDMM(date))
+              .replace(/{carmelSide}/g, schedule.carmelSide)
+              .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
+              .replace(/{yamSide}/g, schedule.yamSide)
+              .replace(/{yamDoctor}/g, schedule.yamDoctor)
+              .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
+              .replace(/{triage}/g, schedule.triage);
+
+            previewMessage += dateMessage + (i < dates.length - 1 ? '\n\n\n' : '');
+          }
+        } else {
+          const schedule = await fetchScheduleForDate(startDate);
+          previewMessage = '\u200F' + messageTemplate
+            .replace(/\\n/g, '\n')
+            .replace(/{dayInHebrew}/g, getDayInHebrew(startDate))
+            .replace(/{date}/g, formatDateDDMM(startDate))
+            .replace(/{carmelSide}/g, schedule.carmelSide)
+            .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
+            .replace(/{yamSide}/g, schedule.yamSide)
+            .replace(/{yamDoctor}/g, schedule.yamDoctor)
+            .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
+            .replace(/{triage}/g, schedule.triage);
+        }
+
+        setMessagePreview(previewMessage);
+      } catch (err) {
+        console.error('Error updating preview:', err);
+        setMessagePreview('Error generating preview');
+      }
+    };
+
+    updatePreview();
+  }, [startDate, endDate, showDateRange, messageTemplate]);
 
   const getDayInHebrew = (date) => {
     const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -106,59 +164,15 @@ const Messages = () => {
   const handleSendDailyMessages = async () => {
     try {
       setLoading(true);
-      let finalMessage = '';
-
-      if (showDateRange && endDate) {
-        const dates = [];
-        let currentDate = new Date(startDate);
-        const lastDate = new Date(endDate);
-        lastDate.setDate(lastDate.getDate() + 1);
-        
-        while (currentDate < lastDate) {
-          dates.push(new Date(currentDate));
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-
-        for (let i = 0; i < dates.length; i++) {
-          const date = dates[i];
-          const schedule = await fetchScheduleForDate(date);
-          
-          let dateMessage = (i === 0 ? '\u200F' : '') + messageTemplate
-            .replace(/\\n/g, '\n')
-            .replace(/{dayInHebrew}/g, getDayInHebrew(date))
-            .replace(/{date}/g, formatDateDDMM(date))
-            .replace(/{carmelSide}/g, schedule.carmelSide)
-            .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
-            .replace(/{yamSide}/g, schedule.yamSide)
-            .replace(/{yamDoctor}/g, schedule.yamDoctor)
-            .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
-            .replace(/{triage}/g, schedule.triage);
-
-          finalMessage += dateMessage + (i < dates.length - 1 ? '\n\n\n' : '');
-        }
-      } else {
-        const schedule = await fetchScheduleForDate(startDate);
-        finalMessage = '\u200F' + messageTemplate
-          .replace(/\\n/g, '\n')
-          .replace(/{dayInHebrew}/g, getDayInHebrew(startDate))
-          .replace(/{date}/g, formatDateDDMM(startDate))
-          .replace(/{carmelSide}/g, schedule.carmelSide)
-          .replace(/{carmelDoctor}/g, schedule.carmelDoctor)
-          .replace(/{yamSide}/g, schedule.yamSide)
-          .replace(/{yamDoctor}/g, schedule.yamDoctor)
-          .replace(/{dayHospitalization}/g, schedule.dayHospitalization)
-          .replace(/{triage}/g, schedule.triage);
-      }
-
+      
       const textarea = document.createElement('textarea');
-      textarea.value = finalMessage;
+      textarea.value = messagePreview;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
       
       alert('הטקסט הועתק ללוח בהצלחה! אפשר להדביק אותו בוואטסאפ.');
-
     } catch (err) {
       console.error('Error sending messages:', err);
       alert('Error sending messages');
@@ -221,6 +235,13 @@ const Messages = () => {
                   />
                 </div>
               )}
+            </div>
+          </div>
+          
+          <div className="message-preview">
+            <h3>Message Preview</h3>
+            <div className="preview-content">
+              <pre>{messagePreview || 'Loading preview...'}</pre>
             </div>
           </div>
           
