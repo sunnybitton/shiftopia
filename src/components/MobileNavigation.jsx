@@ -6,6 +6,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import MessageIcon from '@mui/icons-material/Message';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/Logout';
 import './MobileNavigation.css';
 
 const MobileNavigation = ({ isManager }) => {
@@ -29,6 +30,11 @@ const MobileNavigation = ({ isManager }) => {
   const handleNavigation = (path) => {
     navigate(path);
     setMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   };
 
   return (
@@ -66,6 +72,13 @@ const MobileNavigation = ({ isManager }) => {
                 <span>{item.label}</span>
               </button>
             ))}
+            <button
+              className="menu-item logout"
+              onClick={handleLogout}
+            >
+              <LogoutIcon />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       )}
