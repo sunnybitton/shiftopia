@@ -73,12 +73,17 @@
   padding-bottom: 8px;
   border-bottom: 1px solid #eee;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .day-name {
   font-size: 14px;
   font-weight: 500;
   color: #333;
+  text-align: center;
+  width: 100%;
 }
 
 .shifts-container {
@@ -94,6 +99,23 @@
   background: #f5f7fa;
   border-radius: 4px;
   color: #39587F;
+  text-align: center;
+}
+
+/* Add these classes to match the monthly view colors */
+.shift-item.duty-officer {
+  background: #e8f4ff;
+  color: #1565c0;
+}
+
+.shift-item.after-duty {
+  background: #fff4e5;
+  color: #e65100;
+}
+
+.shift-item.vacation {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .no-shift {
@@ -101,6 +123,7 @@
   font-size: 13px;
   font-style: italic;
   padding: 4px 8px;
+  text-align: center;
 }
 
 /* Mobile styles */
@@ -119,13 +142,12 @@
   }
 
   .date-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
   }
 
   .day-name {
-    font-size: 16px;
+    font-size: 13px;
   }
 
   .shifts-container {
@@ -136,13 +158,30 @@
   .shift-item {
     font-size: 14px;
     padding: 8px 12px;
-    background: #f5f7fa;
     border-radius: 6px;
+    text-align: center;
+  }
+
+  /* Keep the same colors in mobile view */
+  .shift-item.duty-officer {
+    background: #e8f4ff;
+    color: #1565c0;
+  }
+
+  .shift-item.after-duty {
+    background: #fff4e5;
+    color: #e65100;
+  }
+
+  .shift-item.vacation {
+    background: #e8f5e9;
+    color: #2e7d32;
   }
 
   .no-shift {
     font-size: 14px;
     padding: 8px 0;
+    text-align: center;
   }
 
   /* Daily view specific styles */

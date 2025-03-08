@@ -23,9 +23,11 @@ const ListView = ({ scheduleData, view, currentDate }) => {
 
   const formatDate = (date) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
     const dayName = days[date.getDay()];
     const dayNum = date.getDate();
-    const month = date.toLocaleString('default', { month: 'short' });
+    const month = months[date.getMonth()];
     return `${dayName}, ${month} ${dayNum}`;
   };
 
@@ -36,7 +38,10 @@ const ListView = ({ scheduleData, view, currentDate }) => {
     }
 
     return dayData.map((station, index) => (
-      <div key={index} className="shift-item">
+      <div 
+        key={index} 
+        className={`shift-item ${getStationClass(station)}`}
+      >
         {station}
       </div>
     ));

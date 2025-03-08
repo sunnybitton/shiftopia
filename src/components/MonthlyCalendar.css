@@ -103,6 +103,7 @@
   text-overflow: ellipsis;
   font-weight: 500;
   line-height: 1.2;
+  text-align: center;
 }
 
 .shift-tag.duty-officer {
