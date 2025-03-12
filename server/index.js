@@ -17,11 +17,15 @@ const corsOptions = {
     'http://localhost:4173',  // Vite preview
     'https://shiftopia.netlify.app',  // Main Netlify domain
     'https://shiftopia-app.netlify.app', // Alternative Netlify domain
+    'https://shiftopia-backend.onrender.com', // Render.com backend
     /\.netlify\.app$/,  // Any Netlify subdomain
-    /\.netlify\.live$/  // Netlify deploy previews
+    /\.netlify\.live$/,  // Netlify deploy previews
+    /\.onrender\.com$/   // Any Render.com domain
   ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
