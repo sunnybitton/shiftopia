@@ -6,9 +6,7 @@ import appLogo from '../assets/app_logo.svg';
 const Dashboard = () => {
   // Get user data from localStorage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const fullName = user.firstName && user.lastName 
-    ? `${user.firstName} ${user.lastName}`
-    : 'Guest';
+  const fullName = user.name || 'Guest';
 
   // Get today's and tomorrow's dates
   const today = new Date();

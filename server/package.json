@@ -1,12 +1,14 @@
 {
   "name": "shiftopia-server",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.21.2",
-    "googleapis": "^118.0.0"
+    "googleapis": "^118.0.0",
+    "pg": "^8.11.3"
   },
   "scripts": {
     "start": "node index.js",

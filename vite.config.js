@@ -4,15 +4,32 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@credentials': '/credentials'
+  server: {
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      port: 5173,
+      protocol: 'ws',
+      host: 'localhost'
     }
   },
-  optimizeDeps: {
-    include: ['googleapis']
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   },
   define: {
-    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL)
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
   }
 })

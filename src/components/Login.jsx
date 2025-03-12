@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchSheetData } from '../services/sheetsService';
+import { employeeOperations } from '../services/dbService';
 import './Login.css';
 
 const Login = () => {
@@ -23,27 +23,13 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const data = await fetchSheetData('employee_data');
-      // Updated column indices based on the table structure:
-      // Email (index 2), Password (index 5)
-      const userRow = data.slice(1).find(row => 
-        row[2].toLowerCase() === email.toLowerCase() && 
-        row[5] === password
-      );
-
-      if (userRow) {
-        // Store user info with correct indices:
-        // First Name (0), Last Name (1), Email (2), Username (6), Role (7)
-        localStorage.setItem('user', JSON.stringify({
-          firstName: userRow[0],
-          lastName: userRow[1],
-          email: userRow[2],
-          userName: userRow[6],
-          role: userRow[7]
-        }));
+      const response = await employeeOperations.login(email, password);
+      
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
         window.location.href = '/';
       } else {
-        setError('Invalid email or password.');
+        setError(response.message || 'Invalid credentials');
       }
     } catch (err) {
       console.error('Login error:', err);

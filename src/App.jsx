@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Employees from './components/Employees';
@@ -8,6 +8,7 @@ import Settings from './components/Settings';
 import Login from './components/Login';
 import Messages from './components/Messages';
 import MobileNavigation from './components/MobileNavigation';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 function App() {
@@ -31,50 +32,52 @@ function App() {
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={isAuthenticated ? <Navigate to="/" /> : <Login />} 
-        />
-        <Route
-          path="/*"
-          element={
-            isAuthenticated ? (
-              <div className="app">
-                {!isMobile && <Sidebar />}
-                <main className={`main-content ${isMobile ? 'mobile' : ''}`}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route 
-                      path="/employees" 
-                      element={
-                        <ManagerRoute>
-                          <Employees />
-                        </ManagerRoute>
-                      } 
-                    />
-                    <Route path="/schedule" element={<Schedule />} />
-                    <Route 
-                      path="/messages" 
-                      element={
-                        <ManagerRoute>
-                          <Messages />
-                        </ManagerRoute>
-                      } 
-                    />
-                    <Route path="/settings" element={<Settings />} />
-                  </Routes>
-                </main>
-                {isMobile && <MobileNavigation isManager={isManager} />}
-              </div>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-      </Routes>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route 
+            path="/login" 
+            element={isAuthenticated ? <Navigate to="/" /> : <Login />} 
+          />
+          <Route
+            path="/*"
+            element={
+              isAuthenticated ? (
+                <div className="app">
+                  {!isMobile && <Sidebar />}
+                  <main className={`main-content ${isMobile ? 'mobile' : ''}`}>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route 
+                        path="/employees" 
+                        element={
+                          <ManagerRoute>
+                            <Employees />
+                          </ManagerRoute>
+                        } 
+                      />
+                      <Route path="/schedule" element={<Schedule />} />
+                      <Route 
+                        path="/messages" 
+                        element={
+                          <ManagerRoute>
+                            <Messages />
+                          </ManagerRoute>
+                        } 
+                      />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  </main>
+                  {isMobile && <MobileNavigation isManager={isManager} />}
+                </div>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

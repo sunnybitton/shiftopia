@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchSheetData } from '../services/sheetsService';
+import { employeeOperations } from '../services/dbService';
 import './Employees.css';
 
 const Employees = () => {
@@ -10,15 +10,13 @@ const Employees = () => {
   useEffect(() => {
     const loadEmployees = async () => {
       try {
-        const data = await fetchSheetData('employee_data');
-        // Map data to only include first names
-        const employeeData = data.slice(1).map(row => ({
-          firstName: row[0]
-        }));
-        setEmployees(employeeData);
+        console.log('Fetching employees...');
+        const data = await employeeOperations.getAllEmployees();
+        console.log('Received employees:', data);
+        setEmployees(data || []);
       } catch (err) {
-        console.error('Error:', err);
-        setError(err.message);
+        console.error('Error loading employees:', err);
+        setError(err.message || 'Failed to load employees');
       } finally {
         setLoading(false);
       }
@@ -28,11 +26,27 @@ const Employees = () => {
   }, []);
 
   if (loading) {
-    return <div className="employees">Loading employees...</div>;
+    return (
+      <div className="employees loading">
+        <div className="loading-spinner"></div>
+        <p>Loading employees...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="employees">Error: {error}</div>;
+    return (
+      <div className="employees error">
+        <h2>Error Loading Employees</h2>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="retry-button"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -43,13 +57,23 @@ const Employees = () => {
           <table>
             <thead>
               <tr>
-                <th>First Name</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Worker ID</th>
+                <th>Phone</th>
+                <th>Username</th>
               </tr>
             </thead>
             <tbody>
-              {employees.map((employee, index) => (
-                <tr key={index}>
-                  <td>{employee.firstName}</td>
+              {employees.map((employee) => (
+                <tr key={employee.id || employee.email}>
+                  <td>{employee.name}</td>
+                  <td>{employee.email}</td>
+                  <td>{employee.role}</td>
+                  <td>{employee.worker_id}</td>
+                  <td>{employee.phone}</td>
+                  <td>{employee.username}</td>
                 </tr>
               ))}
             </tbody>

@@ -22,7 +22,7 @@ const Schedule = () => {
 
   // Get logged-in user's info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userName = user.userName || '';
+  const userName = user.name || '';
   const isManager = user.role?.toLowerCase() === 'manager';
 
   // Memoize the employee and month lists
@@ -112,6 +112,9 @@ const Schedule = () => {
     const schedule = {};
     const stationNames = data[3] || [];
     
+    // Get first name (everything before the first space)
+    const firstName = selectedEmployee.split(' ')[0];
+    
     // Process only rows 5-36 (days data)
     for (let rowIndex = 5; rowIndex < Math.min(36, data.length); rowIndex++) {
       const row = data[rowIndex];
@@ -124,9 +127,11 @@ const Schedule = () => {
       
       // Start from index 3 for station columns
       for (let i = 3; i < row.length; i++) {
-        // Convert the value to string before comparing
+        // Convert the value to string and get its first name
         const cellValue = row[i]?.toString() || '';
-        if (cellValue.trim() === selectedEmployee && stationNames[i]) {
+        const cellFirstName = cellValue.trim().split(' ')[0];
+        // Compare first names exactly
+        if (cellFirstName === firstName && stationNames[i]) {
           stations.push(stationNames[i]);
         }
       }

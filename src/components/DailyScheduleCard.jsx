@@ -33,8 +33,12 @@ const DailyScheduleCard = ({ date, title }) => {
 
         // Find the user's assignments for this day
         const assignments = [];
+        const firstName = user.name.split(' ')[0];
         stationNames.forEach((station, index) => {
-          if (dayRow[index] === user.firstName) {
+          const cellValue = dayRow[index]?.toString() || '';
+          const cellFirstName = cellValue.trim().split(' ')[0];
+          // Compare first names exactly
+          if (cellFirstName === firstName) {
             assignments.push(station);
           }
         });
