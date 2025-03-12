@@ -11,21 +11,33 @@ const port = process.env.PORT || 3001;
 
 // Configure CORS with specific origins
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',  // Vite dev server
-    'http://localhost:3000',  // Local production build
-    'http://localhost:4173',  // Vite preview
-    'https://shiftopia.netlify.app',  // Main Netlify domain
-    'https://shiftopia-app.netlify.app', // Alternative Netlify domain
-    'https://shiftopia-backend.onrender.com', // Render.com backend
-    /\.netlify\.app$/,  // Any Netlify subdomain
-    /\.netlify\.live$/,  // Netlify deploy previews
-    /\.onrender\.com$/   // Any Render.com domain
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:4173',
+      'https://shiftopia.netlify.app',
+      'https://shiftopia-app.netlify.app',
+      'https://shiftopia-backend.onrender.com'
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || 
+        origin.endsWith('netlify.app') || 
+        origin.endsWith('netlify.live') ||
+        origin.endsWith('onrender.com')) {
+      callback(null, true);
+    } else {
+      console.log('Origin not allowed by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
   exposedHeaders: ['Access-Control-Allow-Origin']
 };
 
@@ -37,10 +49,13 @@ app.options('*', cors(corsOptions));
 
 // Add headers middleware
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Credentials', true);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, Accept');
   next();
 });
 
@@ -48,8 +63,27 @@ app.use((req, res, next) => {
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+    sslmode: 'require'
+  },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Add connection error handling
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// Add connection monitoring
+pool.on('connect', () => {
+  console.log('New client connected to database');
+});
+
+pool.on('remove', () => {
+  console.log('Client removed from pool');
 });
 
 // Initialize database schema
@@ -220,19 +254,47 @@ app.delete('/api/employees/:id', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    console.log('Login attempt:', { email, hasPassword: !!password });
+    
+    if (!email || !password) {
+      console.error('Missing credentials:', { hasEmail: !!email, hasPassword: !!password });
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Log database connection status
+    const testConnection = await pool.query('SELECT NOW()');
+    console.log('Database connection test:', testConnection.rows[0]);
+
     const result = await pool.query(
       'SELECT id, name, email, role, worker_id, phone, username FROM employees WHERE email = $1 AND password = $2 AND active = true',
       [email, password]
     );
     
+    console.log('Query result:', { 
+      rowCount: result.rowCount,
+      hasRows: result.rows.length > 0,
+      userFound: result.rows.length > 0 ? 'Yes' : 'No'
+    });
+    
     if (result.rows.length === 0) {
+      console.log('Invalid credentials for:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
+    console.log('Successful login for:', email);
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Detailed login error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column
+    });
+    res.status(500).json({ error: 'Login failed', details: error.message });
   }
 });
 
