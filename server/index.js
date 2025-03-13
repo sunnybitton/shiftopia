@@ -110,7 +110,7 @@ async function initializeDatabase() {
   }
 }
 
-// Test database connection and initialize schema
+// Test database connection
 pool.query('SELECT NOW()', async (err, res) => {
   if (err) {
     console.error('Database connection error:', err);
@@ -262,7 +262,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Log database connection status
+    // Test database connection
     const testConnection = await pool.query('SELECT NOW()');
     console.log('Database connection test:', testConnection.rows[0]);
 
