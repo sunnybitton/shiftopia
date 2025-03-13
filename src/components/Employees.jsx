@@ -36,7 +36,8 @@ const Employees = () => {
     role: '',
     worker_id: '',
     phone: '',
-    username: ''
+    username: '',
+    password: ''
   });
 
   useEffect(() => {
@@ -69,11 +70,16 @@ const Employees = () => {
         role: '',
         worker_id: '',
         phone: '',
-        username: ''
+        username: '',
+        password: ''
       });
       await loadEmployees();
     } catch (err) {
-      setError('Failed to add employee: ' + err.message);
+      if (err.message.includes('email is already taken')) {
+        setError('An employee with this email already exists');
+      } else {
+        setError('Failed to add employee: ' + err.message);
+      }
     }
   };
 
@@ -160,6 +166,16 @@ const Employees = () => {
           setNewEmployee({...newEmployee, username: e.target.value})}
         required
       />
+      {!onCancel && (
+        <input
+          type="password"
+          placeholder="Initial Password"
+          value={employee.password || ''}
+          onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+          required
+          autoComplete="new-password"
+        />
+      )}
       <div className="form-buttons">
         <button type="submit" className="submit-button">
           {onCancel ? 'Update' : 'Add'} Employee

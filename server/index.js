@@ -105,6 +105,14 @@ async function initializeDatabase() {
       `);
       console.log('Password column added successfully');
     }
+
+    // Log table structure
+    const tableInfo = await pool.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'employees'
+    `);
+    console.log('Current table structure:', tableInfo.rows);
   } catch (error) {
     console.error('Error initializing database:', error);
   }
@@ -200,14 +208,86 @@ app.get('/api/employees/email/:email', async (req, res) => {
 app.post('/api/employees', async (req, res) => {
   try {
     const { name, email, role, worker_id, phone, username, password } = req.body;
-    const result = await pool.query(
-      'INSERT INTO employees (name, email, role, worker_id, phone, username, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, email, role, worker_id, phone, username, password]
+    
+    console.log('Creating employee with data:', {
+      name,
+      email,
+      role,
+      worker_id,
+      phone,
+      username,
+      hasPassword: !!password
+    });
+
+    // Validate required fields
+    if (!name || !email || !role || !worker_id || !phone || !username || !password) {
+      console.error('Missing required fields:', {
+        hasName: !!name,
+        hasEmail: !!email,
+        hasRole: !!role,
+        hasWorkerId: !!worker_id,
+        hasPhone: !!phone,
+        hasUsername: !!username,
+        hasPassword: !!password
+      });
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Check if there's an existing active employee with this email
+    const existingActive = await pool.query(
+      'SELECT id FROM employees WHERE email = $1 AND active = true',
+      [email]
     );
+
+    if (existingActive.rows.length > 0) {
+      return res.status(400).json({ 
+        error: 'This email is already taken',
+        field: 'email'
+      });
+    }
+
+    // Check if there's an inactive employee with this email
+    const existingInactive = await pool.query(
+      'SELECT id FROM employees WHERE email = $1 AND active = false',
+      [email]
+    );
+
+    let result;
+    if (existingInactive.rows.length > 0) {
+      // Reactivate and update the existing employee
+      result = await pool.query(
+        `UPDATE employees 
+         SET name = $1, role = $2, worker_id = $3, phone = $4, username = $5, password = $6, active = true 
+         WHERE email = $7 
+         RETURNING *`,
+        [name, role, worker_id, phone, username, password, email]
+      );
+      console.log('Reactivated and updated inactive employee:', result.rows[0]);
+    } else {
+      // Create new employee
+      result = await pool.query(
+        'INSERT INTO employees (name, email, role, worker_id, phone, username, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [name, email, role, worker_id, phone, username, password]
+      );
+      console.log('Created new employee:', result.rows[0]);
+    }
+    
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error creating employee:', error);
-    res.status(500).json({ error: 'Failed to create employee' });
+    console.error('Detailed error creating employee:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column
+    });
+    
+    res.status(500).json({ 
+      error: 'Failed to create employee',
+      details: error.message
+    });
   }
 });
 

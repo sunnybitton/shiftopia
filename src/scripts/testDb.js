@@ -36,6 +36,7 @@ async function testConnection() {
         worker_id VARCHAR(50) UNIQUE,
         phone VARCHAR(50),
         username VARCHAR(255) UNIQUE,
+        password TEXT,
         active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
