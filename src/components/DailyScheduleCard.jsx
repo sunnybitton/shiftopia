@@ -31,14 +31,13 @@ const DailyScheduleCard = ({ date, title }) => {
           throw new Error('No data for selected date');
         }
 
-        // Find the user's assignments for this day
+        // Find the user's assignments for this day using username
         const assignments = [];
-        const firstName = user.name.split(' ')[0];
+        const username = user.username;
         stationNames.forEach((station, index) => {
-          const cellValue = dayRow[index]?.toString() || '';
-          const cellFirstName = cellValue.trim().split(' ')[0];
-          // Compare first names exactly
-          if (cellFirstName === firstName) {
+          const cellValue = dayRow[index]?.toString().trim() || '';
+          // Compare usernames exactly
+          if (cellValue === username) {
             assignments.push(station);
           }
         });

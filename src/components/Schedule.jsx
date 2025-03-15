@@ -112,8 +112,9 @@ const Schedule = () => {
     const schedule = {};
     const stationNames = data[3] || [];
     
-    // Get first name (everything before the first space)
-    const firstName = selectedEmployee.split(' ')[0];
+    // Get the username from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const username = user.username;
     
     // Process only rows 5-36 (days data)
     for (let rowIndex = 5; rowIndex < Math.min(36, data.length); rowIndex++) {
@@ -127,11 +128,9 @@ const Schedule = () => {
       
       // Start from index 3 for station columns
       for (let i = 3; i < row.length; i++) {
-        // Convert the value to string and get its first name
-        const cellValue = row[i]?.toString() || '';
-        const cellFirstName = cellValue.trim().split(' ')[0];
-        // Compare first names exactly
-        if (cellFirstName === firstName && stationNames[i]) {
+        // Compare with username exactly
+        const cellValue = row[i]?.toString().trim() || '';
+        if (cellValue === username && stationNames[i]) {
           stations.push(stationNames[i]);
         }
       }
