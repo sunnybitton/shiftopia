@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { employeeOperations } from '../services/dbService';
+import LoadingSpinner from './LoadingSpinner';
 import './Employees.css';
 
 // Icons as SVG components
@@ -238,12 +239,7 @@ const Employees = () => {
   };
 
   if (loading) {
-    return (
-      <div className="employees loading">
-        <div className="loading-spinner"></div>
-        <p>Loading employees...</p>
-      </div>
-    );
+    return <LoadingSpinner text="Loading employees..." />;
   }
 
   if (error) {

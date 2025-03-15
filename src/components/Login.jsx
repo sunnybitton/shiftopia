@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { employeeOperations } from '../services/dbService';
+import LoadingSpinner from './LoadingSpinner';
 import './Login.css';
 
 const Login = () => {
@@ -39,6 +40,10 @@ const Login = () => {
     }
   };
 
+  if (loading) {
+    return <LoadingSpinner text="Logging in..." />;
+  }
+
   return (
     <div className="login-container">
       <div className="login-box">
@@ -67,9 +72,7 @@ const Login = () => {
             />
           </div>
           {error && <div className="error-message">{error}</div>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
+          <button type="submit">Login</button>
         </form>
       </div>
     </div>

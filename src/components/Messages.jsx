@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import { fetchSheetData } from '../services/sheetsService';
+import LoadingSpinner from './LoadingSpinner';
 import "react-datepicker/dist/react-datepicker.css";
 import './Messages.css';
 
@@ -180,6 +181,10 @@ const Messages = () => {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return <LoadingSpinner text="Processing messages..." />;
+  }
 
   return (
     <div className="messages-container">

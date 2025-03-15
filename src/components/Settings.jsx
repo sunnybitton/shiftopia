@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { updateSheetData } from '../services/sheetsService';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import LoadingSpinner from './LoadingSpinner';
 import './Settings.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -227,6 +228,10 @@ const Settings = () => {
       setColumnError(error.message || 'Failed to reset preferences');
     }
   };
+
+  if (loading) {
+    return <LoadingSpinner text="Updating settings..." />;
+  }
 
   return (
     <div className="settings">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { fetchSheetData } from '../services/sheetsService';
-import Loading from './Loading';
+import LoadingSpinner from './LoadingSpinner';
 import './DailyScheduleCard.css';
 
 const DailyScheduleCard = ({ date, title }) => {
@@ -66,7 +66,7 @@ const DailyScheduleCard = ({ date, title }) => {
     return (
       <div className="daily-schedule-card loading">
         <h3>{title}</h3>
-        <Loading size={80} />
+        <LoadingSpinner text="Loading schedule..." size="small" />
       </div>
     );
   }

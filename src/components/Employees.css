@@ -65,21 +65,33 @@
   align-items: center;
   justify-content: center;
   min-height: 300px;
+  padding: 2rem;
 }
 
+.employees.loading p {
+  color: #666;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Remove old loader styles */
+.calendar-loader,
+.calendar-header,
+.calendar-grid,
+.calendar-cell,
 .loading-spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #39587F;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  display: none;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Remove old animations */
+@keyframes pulse {
+  0% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 /* Error state */

@@ -1,0 +1,39 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.loading-container.large {
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.loading-container.medium {
+  min-height: 200px;
+  padding: 1.5rem;
+}
+
+.loading-container.small {
+  min-height: 120px;
+  padding: 1rem;
+}
+
+.loading-container p {
+  color: #666;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.loading-container.small p {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.loading-container.medium p {
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+} 
