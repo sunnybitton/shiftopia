@@ -24,12 +24,18 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [columnPreferences, setColumnPreferences] = useState({
+    visibleColumns: ["name", "email", "role", "username", "worker_id", "phone"],
+    columnOrder: ["name", "email", "role", "username", "worker_id", "phone"]
+  });
   const [newEmployee, setNewEmployee] = useState({
     name: '',
     email: '',
@@ -42,7 +48,56 @@ const Employees = () => {
 
   useEffect(() => {
     loadEmployees();
-  }, []);
+    
+    // Get initial preferences from localStorage
+    const storedPreferences = localStorage.getItem('columnPreferences');
+    if (storedPreferences) {
+      const preferences = JSON.parse(storedPreferences);
+      // Filter out id and active fields
+      const filteredPreferences = {
+        visibleColumns: preferences.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
+        columnOrder: preferences.columnOrder.filter(col => col !== 'id' && col !== 'active')
+      };
+      setColumnPreferences(filteredPreferences);
+    } else {
+      fetchColumnPreferences();
+    }
+
+    // Listen for changes to column preferences
+    const handleStorageChange = (e) => {
+      if (e.key === 'columnPreferences' && e.newValue) {
+        const preferences = JSON.parse(e.newValue);
+        // Filter out id and active fields
+        const filteredPreferences = {
+          visibleColumns: preferences.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
+          columnOrder: preferences.columnOrder.filter(col => col !== 'id' && col !== 'active')
+        };
+        setColumnPreferences(filteredPreferences);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []); // Only run on mount
+
+  const fetchColumnPreferences = async () => {
+    try {
+      const response = await fetch(`${API_URL}/settings/column-preferences`);
+      if (!response.ok) throw new Error('Failed to fetch column preferences');
+      const data = await response.json();
+      // Filter out id and active fields
+      const filteredPreferences = {
+        visibleColumns: data.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
+        columnOrder: data.columnOrder.filter(col => col !== 'id' && col !== 'active')
+      };
+      setColumnPreferences(filteredPreferences);
+      localStorage.setItem('columnPreferences', JSON.stringify(filteredPreferences));
+    } catch (err) {
+      console.error('Error fetching column preferences:', err);
+    }
+  };
 
   const loadEmployees = async () => {
     try {
@@ -110,62 +165,40 @@ const Employees = () => {
     }
   };
 
+  const getColumnLabel = (columnId) => {
+    const labels = {
+      name: 'Name',
+      email: 'Email',
+      role: 'Role',
+      worker_id: 'Worker ID',
+      phone: 'Phone',
+      username: 'Username'
+    };
+    return labels[columnId] || columnId;
+  };
+
   const renderEmployeeForm = (employee, onSubmit, onCancel) => (
     <form onSubmit={onSubmit} className="employee-form">
-      <input
-        type="text"
-        placeholder="Name"
-        value={employee.name || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, name: e.target.value}) :
-          setNewEmployee({...newEmployee, name: e.target.value})}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={employee.email || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, email: e.target.value}) :
-          setNewEmployee({...newEmployee, email: e.target.value})}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Role"
-        value={employee.role || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, role: e.target.value}) :
-          setNewEmployee({...newEmployee, role: e.target.value})}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Worker ID"
-        value={employee.worker_id || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, worker_id: e.target.value}) :
-          setNewEmployee({...newEmployee, worker_id: e.target.value})}
-        required
-      />
-      <input
-        type="tel"
-        placeholder="Phone"
-        value={employee.phone || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, phone: e.target.value}) :
-          setNewEmployee({...newEmployee, phone: e.target.value})}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Username"
-        value={employee.username || ''}
-        onChange={(e) => onCancel ? 
-          setEditingEmployee({...editingEmployee, username: e.target.value}) :
-          setNewEmployee({...newEmployee, username: e.target.value})}
-        required
-      />
+      {columnPreferences.columnOrder
+        .filter(columnId => columnId !== 'id' && columnId !== 'active') // Exclude non-editable fields
+        .map(columnId => (
+          <input
+            key={columnId}
+            type={columnId === 'email' ? 'email' : columnId === 'phone' ? 'tel' : 'text'}
+            placeholder={getColumnLabel(columnId)}
+            value={employee[columnId] || ''}
+            onChange={(e) => {
+              const updatedEmployee = onCancel
+                ? { ...editingEmployee, [columnId]: e.target.value }
+                : { ...newEmployee, [columnId]: e.target.value };
+              
+              onCancel
+                ? setEditingEmployee(updatedEmployee)
+                : setNewEmployee(updatedEmployee);
+            }}
+            required={columnId === 'name' || columnId === 'email'}
+          />
+        ))}
       {!onCancel && (
         <input
           type="password"
@@ -241,12 +274,11 @@ const Employees = () => {
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Worker ID</th>
-                <th>Phone</th>
-                <th>Username</th>
+                {columnPreferences.columnOrder
+                  .filter(columnId => columnPreferences.visibleColumns.includes(columnId))
+                  .map(columnId => (
+                    <th key={columnId}>{getColumnLabel(columnId)}</th>
+                  ))}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -254,7 +286,7 @@ const Employees = () => {
               {employees.map((employee) => (
                 <tr key={employee.id || employee.email}>
                   {editingEmployee && editingEmployee.id === employee.id ? (
-                    <td colSpan="7">
+                    <td colSpan={columnPreferences.visibleColumns.length + 1}>
                       {renderEmployeeForm(
                         editingEmployee,
                         handleUpdateEmployee,
@@ -263,12 +295,11 @@ const Employees = () => {
                     </td>
                   ) : (
                     <>
-                      <td>{employee.name}</td>
-                      <td>{employee.email}</td>
-                      <td>{employee.role}</td>
-                      <td>{employee.worker_id}</td>
-                      <td>{employee.phone}</td>
-                      <td>{employee.username}</td>
+                      {columnPreferences.columnOrder
+                        .filter(columnId => columnPreferences.visibleColumns.includes(columnId))
+                        .map(columnId => (
+                          <td key={columnId}>{employee[columnId]}</td>
+                        ))}
                       <td className="action-buttons">
                         <button
                           onClick={() => setEditingEmployee({...employee})}

@@ -106,6 +106,26 @@ async function initializeDatabase() {
       console.log('Password column added successfully');
     }
 
+    // Check if column_preferences column exists
+    const checkPreferencesColumn = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'employees' 
+      AND column_name = 'column_preferences'
+    `);
+
+    if (checkPreferencesColumn.rows.length === 0) {
+      console.log('Adding column_preferences column to employees table...');
+      await pool.query(`
+        ALTER TABLE employees 
+        ADD COLUMN IF NOT EXISTS column_preferences JSONB DEFAULT '{
+          "visibleColumns": ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
+          "columnOrder": ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
+        }'::jsonb
+      `);
+      console.log('Column preferences column added successfully');
+    }
+
     // Log table structure
     const tableInfo = await pool.query(`
       SELECT column_name, data_type 
@@ -690,6 +710,78 @@ if (process.env.NODE_ENV !== 'production') {
     }
   });
 }
+
+// Column preferences endpoints
+app.get('/api/settings/column-preferences', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT column_preferences 
+      FROM employees 
+      WHERE role = 'manager' 
+      LIMIT 1
+    `);
+    
+    if (result.rows.length === 0) {
+      return res.json({
+        visibleColumns: ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
+        columnOrder: ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
+      });
+    }
+    
+    res.json(result.rows[0].column_preferences);
+  } catch (error) {
+    console.error('Error fetching column preferences:', error);
+    res.status(500).json({ error: 'Failed to fetch column preferences' });
+  }
+});
+
+app.put('/api/settings/column-preferences', async (req, res) => {
+  try {
+    const { visibleColumns, columnOrder } = req.body;
+    
+    // Validate required fields
+    if (!visibleColumns || !columnOrder) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Ensure 'name' column is always visible
+    if (!visibleColumns.includes('name')) {
+      return res.status(400).json({ error: 'The name column must remain visible' });
+    }
+
+    // Update all manager accounts
+    await pool.query(`
+      UPDATE employees 
+      SET column_preferences = $1::jsonb 
+      WHERE role = 'manager'
+    `, [{ visibleColumns, columnOrder }]);
+    
+    res.json({ message: 'Column preferences updated successfully' });
+  } catch (error) {
+    console.error('Error updating column preferences:', error);
+    res.status(500).json({ error: 'Failed to update column preferences' });
+  }
+});
+
+app.post('/api/settings/column-preferences/reset', async (req, res) => {
+  try {
+    const defaultPreferences = {
+      visibleColumns: ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
+      columnOrder: ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
+    };
+
+    await pool.query(`
+      UPDATE employees 
+      SET column_preferences = $1::jsonb 
+      WHERE role = 'manager'
+    `, [defaultPreferences]);
+    
+    res.json(defaultPreferences);
+  } catch (error) {
+    console.error('Error resetting column preferences:', error);
+    res.status(500).json({ error: 'Failed to reset column preferences' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

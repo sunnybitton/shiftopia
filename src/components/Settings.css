@@ -16,8 +16,12 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   max-width: 400px;
-  margin: 0 auto;
+  margin: 0 auto 40px auto;
   padding: 24px;
+}
+
+.settings-container:last-child {
+  margin-bottom: 0;
 }
 
 .settings-container h2 {
@@ -87,6 +91,129 @@ button[type="submit"]:disabled {
   cursor: not-allowed;
 }
 
+/* Column Preferences Styles */
+.column-preferences {
+  margin-top: 20px;
+}
+
+.column-toggles,
+.column-order {
+  margin-bottom: 24px;
+}
+
+.column-toggles h3,
+.column-order h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.toggle-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.toggle-item input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.required-badge {
+  font-size: 12px;
+  padding: 2px 6px;
+  background: #f0f7ff;
+  color: #39587F;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  min-height: 100px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.order-item {
+  padding: 12px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.order-item:hover {
+  background-color: #f5f7fa;
+}
+
+.order-item.dragging {
+  background: #e8f4ff;
+  border-color: #39587F;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+
+.column-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.save-button,
+.reset-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-button {
+  background: #39587F;
+  color: white;
+  border: none;
+  flex: 1;
+}
+
+.save-button:hover {
+  opacity: 0.9;
+}
+
+.reset-button {
+  background: none;
+  border: 1px solid #e2e8f0;
+  color: #666;
+}
+
+.reset-button:hover {
+  background: #f8fafc;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
   .settings {
@@ -118,7 +245,26 @@ button[type="submit"]:disabled {
     padding: 10px;
   }
 
-  button[type="submit"] {
-    padding: 10px;
+  .column-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .save-button,
+  .reset-button {
+    width: 100%;
+  }
+
+  .toggle-item {
+    font-size: 16px;
+  }
+
+  .toggle-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .order-item {
+    padding: 12px;
   }
 }

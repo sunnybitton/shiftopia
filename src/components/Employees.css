@@ -182,10 +182,9 @@
 }
 
 .action-buttons {
-  white-space: nowrap;
   display: flex;
-  gap: 0.25rem;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 /* Forms */
@@ -290,5 +289,72 @@
   .icon-button svg {
     width: 14px;
     height: 14px;
+  }
+}
+
+/* Add styles for the Actions column alignment */
+.employees table th:last-child,
+.employees table td:last-child {
+  text-align: right;
+}
+
+/* Mobile responsiveness for table */
+@media screen and (max-width: 768px) {
+  .employees-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .employees-list table {
+    min-width: 600px; /* Ensure minimum width to prevent squishing */
+    margin-bottom: 16px;
+  }
+
+  .employees-list td, 
+  .employees-list th {
+    padding: 12px 8px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    min-width: 80px;
+  }
+
+  .employees {
+    padding: 16px;
+  }
+
+  .add-employee-form {
+    margin: 16px -16px;
+    padding: 16px;
+  }
+
+  .employee-form input {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}
+
+/* Additional improvements for very small screens */
+@media screen and (max-width: 480px) {
+  .employees-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .employees-header h1 {
+    font-size: 24px;
+    margin: 0;
+  }
+
+  .add-button {
+    padding: 8px;
   }
 } 
