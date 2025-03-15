@@ -46,6 +46,16 @@ const Employees = () => {
     password: ''
   });
 
+  // Column configuration
+  const allColumns = [
+    { id: 'name', label: 'Name', required: true },
+    { id: 'email', label: 'Email', required: false },
+    { id: 'role', label: 'Role', required: false },
+    { id: 'username', label: 'Username', required: false },
+    { id: 'worker_id', label: 'Worker ID', required: false },
+    { id: 'phone', label: 'Phone', required: false }
+  ];
+
   useEffect(() => {
     loadEmployees();
     
@@ -177,11 +187,15 @@ const Employees = () => {
     return labels[columnId] || columnId;
   };
 
-  const renderEmployeeForm = (employee, onSubmit, onCancel) => (
-    <form onSubmit={onSubmit} className="employee-form">
-      {columnPreferences.columnOrder
-        .filter(columnId => columnId !== 'id' && columnId !== 'active') // Exclude non-editable fields
-        .map(columnId => (
+  const renderEmployeeForm = (employee, onSubmit, onCancel) => {
+    // When editing (onCancel exists), show all fields regardless of visibility settings
+    const fieldsToShow = onCancel 
+      ? allColumns.map(col => col.id).filter(id => id !== 'id' && id !== 'active')
+      : columnPreferences.columnOrder.filter(columnId => columnId !== 'id' && columnId !== 'active');
+
+    return (
+      <form onSubmit={onSubmit} className="employee-form">
+        {fieldsToShow.map(columnId => (
           <input
             key={columnId}
             type={columnId === 'email' ? 'email' : columnId === 'phone' ? 'tel' : 'text'}
@@ -199,28 +213,29 @@ const Employees = () => {
             required={columnId === 'name' || columnId === 'email'}
           />
         ))}
-      {!onCancel && (
-        <input
-          type="password"
-          placeholder="Initial Password"
-          value={employee.password || ''}
-          onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-          required
-          autoComplete="new-password"
-        />
-      )}
-      <div className="form-buttons">
-        <button type="submit" className="submit-button">
-          {onCancel ? 'Update' : 'Add'} Employee
-        </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel} className="cancel-button">
-            Cancel
-          </button>
+        {!onCancel && (
+          <input
+            type="password"
+            placeholder="Initial Password"
+            value={employee.password || ''}
+            onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+            required
+            autoComplete="new-password"
+          />
         )}
-      </div>
-    </form>
-  );
+        <div className="form-buttons">
+          <button type="submit" className="submit-button">
+            {onCancel ? 'Update' : 'Add'} Employee
+          </button>
+          {onCancel && (
+            <button type="button" onClick={onCancel} className="cancel-button">
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+    );
+  };
 
   if (loading) {
     return (
