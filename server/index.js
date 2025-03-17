@@ -783,6 +783,107 @@ app.post('/api/settings/column-preferences/reset', async (req, res) => {
   }
 });
 
+// Worksheet endpoints
+app.get('/api/worksheets', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM worksheets ORDER BY year DESC, month DESC'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching worksheets:', err);
+    res.status(500).json({ error: 'Failed to fetch worksheets' });
+  }
+});
+
+app.post('/api/worksheets', async (req, res) => {
+  const { month, year, name, status = 'draft' } = req.body;
+  const userId = req.user?.id; // Assuming you have user info in req.user
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO worksheets (month, year, name, status, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [month, year, name, status, userId]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating worksheet:', err);
+    res.status(500).json({ error: 'Failed to create worksheet' });
+  }
+});
+
+app.put('/api/worksheets/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE worksheets SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Worksheet not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating worksheet status:', err);
+    res.status(500).json({ error: 'Failed to update worksheet status' });
+  }
+});
+
+app.delete('/api/worksheets/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM worksheets WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Worksheet not found' });
+    }
+    res.json({ message: 'Worksheet deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting worksheet:', err);
+    res.status(500).json({ error: 'Failed to delete worksheet' });
+  }
+});
+
+app.get('/api/worksheets/:id/entries', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM worksheet_entries WHERE worksheet_id = $1 ORDER BY day, workstation',
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching worksheet entries:', err);
+    res.status(500).json({ error: 'Failed to fetch worksheet entries' });
+  }
+});
+
+app.post('/api/worksheets/:id/entries', async (req, res) => {
+  const { id } = req.params;
+  const { day, workstation, employee_assigned } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO worksheet_entries (worksheet_id, day, workstation, employee_assigned)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (worksheet_id, day, workstation)
+       DO UPDATE SET employee_assigned = $4, updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [id, day, workstation, employee_assigned]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating worksheet entry:', err);
+    res.status(500).json({ error: 'Failed to update worksheet entry' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

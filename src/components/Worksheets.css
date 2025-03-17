@@ -1,0 +1,190 @@
+.worksheets-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.worksheets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+
+.worksheets-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 1.75rem;
+  font-weight: 500;
+}
+
+/* Icon Buttons */
+.icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.add-button {
+  background-color: #39587F;
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #2c4361;
+}
+
+.view-button {
+  color: #1565c0;
+  margin-right: 0.5rem;
+}
+
+.edit-button {
+  color: #2e7d32;
+  margin-right: 0.5rem;
+}
+
+.delete-button {
+  color: #e65100;
+}
+
+.delete-button:hover {
+  opacity: 0.8;
+}
+
+.worksheets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.worksheet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.worksheet-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.worksheet-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.status-badge {
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status-badge.published {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.draft {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.worksheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-right: 0.5rem;
+}
+
+.status-select:hover {
+  border-color: #39587F;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #39587F;
+  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .worksheets-container {
+    padding: 1rem;
+  }
+
+  .worksheets-header {
+    flex-direction: row;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .worksheets-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .worksheet-item {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .worksheet-name {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .worksheet-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .status-select {
+    flex: 1;
+    max-width: 120px;
+  }
+
+  .icon-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .icon-button svg {
+    width: 14px;
+    height: 14px;
+  }
+} 

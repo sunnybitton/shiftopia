@@ -1,14 +1,14 @@
 {
   "name": "shiftopia",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "generate-assets": "node scripts/generate-icons.js"
+    "migrate": "node src/scripts/runMigrations.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -17,11 +17,12 @@
     "@mui/material": "^6.3.0",
     "@react-pdf/renderer": "^4.1.5",
     "@types/react-datepicker": "^6.2.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.4.7",
     "googleapis": "^144.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "pg": "^8.14.1",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-datepicker": "^7.5.0",

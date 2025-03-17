@@ -7,6 +7,7 @@ import Schedule from './components/Schedule';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import Messages from './components/Messages';
+import Worksheets from './components/Worksheets';
 import MobileNavigation from './components/MobileNavigation';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
@@ -66,6 +67,14 @@ function App() {
                         } 
                       />
                       <Route path="/settings" element={<Settings />} />
+                      <Route 
+                        path="/worksheets" 
+                        element={
+                          <ManagerRoute>
+                            <Worksheets />
+                          </ManagerRoute>
+                        } 
+                      />
                     </Routes>
                   </main>
                   {isMobile && <MobileNavigation isManager={isManager} />}

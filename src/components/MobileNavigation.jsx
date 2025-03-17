@@ -7,6 +7,7 @@ import MessageIcon from '@mui/icons-material/Message';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ArticleIcon from '@mui/icons-material/Article';
 import './MobileNavigation.css';
 
 const MobileNavigation = ({ isManager }) => {
@@ -23,6 +24,7 @@ const MobileNavigation = ({ isManager }) => {
     ...(isManager ? [
       { path: '/employees', icon: <PeopleIcon />, label: 'Employees' },
       { path: '/messages', icon: <MessageIcon />, label: 'Messages' },
+      { path: '/worksheets', icon: <ArticleIcon />, label: 'Worksheets' },
     ] : []),
     { path: '/settings', icon: <SettingsIcon />, label: 'Settings' },
   ];

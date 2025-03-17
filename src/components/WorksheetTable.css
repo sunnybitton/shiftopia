@@ -1,0 +1,108 @@
+.worksheet-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.worksheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.worksheet-table th,
+.worksheet-table td {
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid #eee;
+}
+
+.worksheet-table th {
+  background-color: #f8f9fa;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.worksheet-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.cell-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.cell-input:hover {
+  border-color: #39587F;
+}
+
+.cell-input:focus {
+  outline: none;
+  border-color: #39587F;
+  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
+}
+
+.weekday-cell {
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hebrew-letter {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #39587F;
+}
+
+.weekday-name {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.day-cell {
+  font-weight: 500;
+  color: #333;
+}
+
+/* RTL specific styles */
+[dir="rtl"] .worksheet-table th,
+[dir="rtl"] .worksheet-table td {
+  text-align: center;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .worksheet-table-container {
+    margin-top: 1rem;
+    border-radius: 0;
+  }
+
+  .worksheet-table th,
+  .worksheet-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .cell-input {
+    padding: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .hebrew-letter {
+    font-size: 1rem;
+  }
+
+  .weekday-name {
+    font-size: 0.75rem;
+  }
+} 

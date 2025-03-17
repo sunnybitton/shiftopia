@@ -39,6 +39,13 @@ const Sidebar = () => {
           </li>
           {isManager && (
             <li>
+              <NavLink to="/worksheets" className={({ isActive }) => isActive ? 'active' : ''}>
+                Worksheets
+              </NavLink>
+            </li>
+          )}
+          {isManager && (
+            <li>
               <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
                 Messages
               </NavLink>
