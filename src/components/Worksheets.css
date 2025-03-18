@@ -31,12 +31,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: none;
+  color: #666;
 }
 
-.icon-button svg {
-  width: 16px;
-  height: 16px;
+.icon-button:hover {
+  color: #333;
 }
 
 .add-button {
@@ -63,7 +63,7 @@
 }
 
 .delete-button:hover {
-  opacity: 0.8;
+  color: #ff3b30;
 }
 
 .worksheets-list {
@@ -116,7 +116,7 @@
 .worksheet-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .status-select {
@@ -139,6 +139,27 @@
   outline: none;
   border-color: #39587F;
   box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
+}
+
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 8px;
+}
+
+.status-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.status-label:first-child {
+  color: #999;
+}
+
+/* When status is published, change the color of the "Published" label */
+.toggle-switch input:checked ~ .status-label:last-child {
+  color: #34c759;
 }
 
 /* Mobile styles */

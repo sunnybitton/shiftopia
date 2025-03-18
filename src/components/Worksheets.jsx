@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import NewWorksheetModal from './NewWorksheetModal';
 import WorksheetTable from './WorksheetTable';
+import ToggleSwitch from './ToggleSwitch';
 import './Worksheets.css';
 
 // Icons as SVG components
@@ -84,20 +85,34 @@ const Worksheets = () => {
 
   const handleStatusToggle = async (worksheetId, newStatus) => {
     try {
+      console.log(`Updating worksheet ${worksheetId} status to ${newStatus}`);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/worksheets/${worksheetId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!response.ok) throw new Error('Failed to update status');
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Server error:', errorData);
+        throw new Error(errorData?.error || 'Failed to update status');
+      }
+      
+      const updatedWorksheet = await response.json();
+      console.log('Status updated successfully:', updatedWorksheet);
       
       setWorksheets(worksheets.map(ws => 
-        ws.id === worksheetId ? { ...ws, status: newStatus } : ws
+        ws.id === worksheetId ? { ...ws, status: updatedWorksheet.status } : ws
       ));
     } catch (err) {
       console.error('Error updating worksheet status:', err);
+      // Revert the toggle state since the update failed
+      setWorksheets(worksheets.map(ws => 
+        ws.id === worksheetId ? { ...ws } : ws
+      ));
     }
   };
 
@@ -236,14 +251,17 @@ const Worksheets = () => {
               )}
               {isManager && (
                 <>
-                  <select
-                    className="status-select"
-                    value={worksheet.status}
-                    onChange={(e) => handleStatusToggle(worksheet.id, e.target.value)}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
+                  <div className="status-toggle">
+                    <span className="status-label">Draft</span>
+                    <ToggleSwitch
+                      checked={worksheet.status === 'published'}
+                      onChange={() => handleStatusToggle(
+                        worksheet.id,
+                        worksheet.status === 'published' ? 'draft' : 'published'
+                      )}
+                    />
+                    <span className="status-label">Published</span>
+                  </div>
                   <button 
                     className="icon-button delete-button"
                     onClick={() => handleDelete(worksheet.id)}

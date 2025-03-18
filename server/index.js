@@ -816,18 +816,35 @@ app.put('/api/worksheets/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
+  // Validate status
+  if (!status || !['draft', 'published'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status. Must be either "draft" or "published".' });
+  }
+
   try {
-    const result = await pool.query(
-      'UPDATE worksheets SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+    console.log(`Updating worksheet ${id} status to ${status}`);
+    
+    // First check if the worksheet exists
+    const checkResult = await pool.query(
+      'SELECT id FROM worksheets WHERE id = $1',
+      [id]
     );
-    if (result.rows.length === 0) {
+
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: 'Worksheet not found' });
     }
+
+    // Update the status
+    const result = await pool.query(
+      'UPDATE worksheets SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+
+    console.log('Update successful:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error updating worksheet status:', err);
-    res.status(500).json({ error: 'Failed to update worksheet status' });
+    res.status(500).json({ error: 'Failed to update worksheet status', details: err.message });
   }
 });
 
