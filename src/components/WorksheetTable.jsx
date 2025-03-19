@@ -4,7 +4,7 @@ import './WorksheetTable.css';
 const WorksheetTable = ({ 
   month, 
   year, 
-  workstations = ['Workstation 1', 'Workstation 2', 'Workstation 3'],
+  workstations = [],
   entries = [],
   onCellUpdate,
   isEditable = false
@@ -25,20 +25,22 @@ const WorksheetTable = ({
     };
   });
 
-  // Create a map of entries for quick lookup
-  const entryMap = entries.reduce((acc, entry) => {
-    const key = `${entry.day}-${entry.workstation}`;
-    acc[key] = entry.employee_assigned;
+  // Create a map of entries for quick lookup, ensuring entries is an array
+  const entryMap = Array.isArray(entries) ? entries.reduce((acc, entry) => {
+    if (entry && entry.day && entry.workstation) {
+      const key = `${entry.day}-${entry.workstation}`;
+      acc[key] = entry.employee_assigned || '';
+    }
     return acc;
-  }, {});
+  }, {}) : {};
 
   const handleCellEdit = (day, workstation, value) => {
     if (!isEditable) return;
     onCellUpdate?.(day, workstation, value);
   };
 
-  // Reverse workstations array for RTL display
-  const rtlWorkstations = [...workstations].reverse();
+  // Ensure workstations is always an array
+  const stationsInOrder = Array.isArray(workstations) ? workstations : [];
 
   return (
     <div className="worksheet-table-container" dir="rtl">
@@ -47,7 +49,7 @@ const WorksheetTable = ({
           <tr>
             <th>תאריך</th>
             <th>יום</th>
-            {rtlWorkstations.map(station => (
+            {stationsInOrder.map(station => (
               <th key={station}>{station}</th>
             ))}
           </tr>
@@ -59,7 +61,7 @@ const WorksheetTable = ({
               <td className="weekday-cell">
                 <span className="hebrew-letter">{hebrewWeekday}</span>
               </td>
-              {rtlWorkstations.map(station => (
+              {stationsInOrder.map(station => (
                 <td key={`${day}-${station}`}>
                   <input
                     type="text"

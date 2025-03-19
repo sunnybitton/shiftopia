@@ -1,6 +1,8 @@
 .settings {
   padding: 20px;
   max-width: 100%;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
 .settings h1 {
@@ -13,11 +15,55 @@
 .settings-container {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  max-width: 400px;
-  margin: 0 auto 40px auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 24px;
+  margin: 0 auto 24px;
+  max-width: 1200px;
+}
+
+.settings-header {
+  margin-bottom: 30px;
+}
+
+.settings-header h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #4a90e2;
 }
 
 .settings-container:last-child {
@@ -55,18 +101,23 @@
 .form-group input:focus {
   outline: none;
   border-color: #39587F;
+  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
 }
 
 .error-message {
-  color: #dc3545;
-  font-size: 14px;
-  margin-top: 8px;
+  color: #ff4444;
+  padding: 10px;
+  margin: 10px 0;
+  background: #fff1f1;
+  border-radius: 4px;
 }
 
 .success-message {
-  color: #28a745;
-  font-size: 14px;
-  margin-top: 8px;
+  color: #4caf50;
+  padding: 10px;
+  margin: 10px 0;
+  background: #f1fff1;
+  border-radius: 4px;
 }
 
 button[type="submit"] {
@@ -99,6 +150,9 @@ button[type="submit"]:disabled {
 .column-toggles,
 .column-order {
   margin-bottom: 24px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
 }
 
 .column-toggles h3,
@@ -121,6 +175,14 @@ button[type="submit"]:disabled {
   font-size: 14px;
   color: #333;
   cursor: pointer;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.toggle-item:hover {
+  background: #f5f7fa;
 }
 
 .toggle-item input[type="checkbox"] {
@@ -149,8 +211,9 @@ button[type="submit"]:disabled {
   gap: 8px;
   padding: 8px;
   min-height: 100px;
-  background: #f8f9fa;
+  background: white;
   border-radius: 8px;
+  border: 1px solid #eee;
 }
 
 .order-item {
@@ -204,6 +267,11 @@ button[type="submit"]:disabled {
   opacity: 0.9;
 }
 
+.save-button:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
 .reset-button {
   background: none;
   border: 1px solid #e2e8f0;
@@ -224,6 +292,7 @@ button[type="submit"]:disabled {
   .settings-container {
     border-radius: 8px;
     padding: 20px;
+    margin-bottom: 16px;
   }
 
   .settings h1 {

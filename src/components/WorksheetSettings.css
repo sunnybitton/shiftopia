@@ -1,0 +1,177 @@
+.worksheet-settings {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.worksheet-settings h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.stations-table {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.stations-header {
+  display: grid;
+  grid-template-columns: 80px 200px 150px 1fr 80px;
+  gap: 10px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+  color: #666;
+}
+
+.station-row {
+  display: grid;
+  grid-template-columns: 80px 200px 150px 1fr 80px;
+  gap: 10px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  align-items: start;
+}
+
+.station-row:hover {
+  background: #f9f9f9;
+}
+
+.move-column {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.move-button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+}
+
+.move-button:hover:not(:disabled) {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.move-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.name-column input,
+.code-column input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.name-column input:focus,
+.code-column input:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.station-attributes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.attribute {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attribute label {
+  font-size: 14px;
+  color: #666;
+  min-width: 100px;
+}
+
+.attribute select {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.attribute select[multiple] {
+  height: 80px;
+}
+
+.color-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.color-picker-popover {
+  position: absolute;
+  z-index: 2;
+}
+
+.color-picker-cover {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.delete-button:hover {
+  background: #fff1f1;
+}
+
+.add-station-row {
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+.add-button {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-button:hover {
+  background: #357abd;
+}
+
+.error-message {
+  color: #ff4444;
+  padding: 20px;
+  text-align: center;
+  background: #fff1f1;
+  border-radius: 4px;
+  margin: 20px 0;
+} 

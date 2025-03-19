@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { updateSheetData } from '../services/sheetsService';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import LoadingSpinner from './LoadingSpinner';
+import WorksheetSettings from './WorksheetSettings';
 import './Settings.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -156,9 +157,6 @@ const Settings = () => {
     setHasUnsavedChanges(true);
   };
 
-  // Only show visible columns in the drag and drop list
-  const visibleColumnsInOrder = columnPreferences?.columnOrder || [];
-
   const saveColumnPreferences = async () => {
     try {
       setColumnError('');
@@ -290,6 +288,13 @@ const Settings = () => {
           </button>
         </form>
       </div>
+
+      {/* Worksheet Settings Section */}
+      {isManager && (
+        <div className="settings-container">
+          <WorksheetSettings />
+        </div>
+      )}
 
       {/* Employees Page Configuration Section (Managers Only) */}
       {isManager && columnPreferences && (

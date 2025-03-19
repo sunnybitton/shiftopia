@@ -483,12 +483,12 @@ app.get('/api/sheets/:sheetName', async (req, res) => {
       valueRenderOption: 'UNFORMATTED_VALUE',
       dateTimeRenderOption: 'FORMATTED_STRING'
     });
-    
+
     if (!response.data.values) {
       console.log('No data found in sheet');
       return res.status(404).json({ error: 'No data found' });
     }
-    
+
     res.json(response.data.values);
   } catch (error) {
     console.error('Detailed error:', {
@@ -797,18 +797,61 @@ app.get('/api/worksheets', async (req, res) => {
 });
 
 app.post('/api/worksheets', async (req, res) => {
-  const { month, year, name, status = 'draft' } = req.body;
-  const userId = req.user?.id; // Assuming you have user info in req.user
-
   try {
-    const result = await pool.query(
-      'INSERT INTO worksheets (month, year, name, status, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [month, year, name, status, userId]
-    );
-    res.json(result.rows[0]);
+    const { month, year, name, status, stations } = req.body;
+    
+    console.log('Creating worksheet with data:', {
+      month,
+      year,
+      name,
+      status,
+      stations: stations,
+      stationsType: typeof stations,
+      stationsIsArray: Array.isArray(stations)
+    });
+
+    // Validate required fields
+    if (!month || !year || !name || !status) {
+      console.log('Missing required fields:', { month, year, name, status });
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: { month, year, name, status }
+      });
+    }
+
+    // Ensure stations is an array and convert to JSONB
+    const stationsData = Array.isArray(stations) ? stations : [];
+    console.log('Processed stations data:', stationsData);
+    
+    try {
+      const result = await pool.query(
+        'INSERT INTO worksheets (month, year, name, status, stations) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [month, year, name, status, JSON.stringify(stationsData)]
+      );
+
+      console.log('Worksheet created successfully:', result.rows[0]);
+      res.status(201).json(result.rows[0]);
+    } catch (dbError) {
+      console.error('Database error:', {
+        message: dbError.message,
+        detail: dbError.detail,
+        code: dbError.code,
+        constraint: dbError.constraint
+      });
+      throw dbError;
+    }
   } catch (err) {
-    console.error('Error creating worksheet:', err);
-    res.status(500).json({ error: 'Failed to create worksheet' });
+    console.error('Error creating worksheet:', {
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      detail: err.detail
+    });
+    res.status(500).json({ 
+      error: 'Failed to create worksheet',
+      details: err.message,
+      code: err.code
+    });
   }
 });
 
@@ -898,6 +941,194 @@ app.post('/api/worksheets/:id/entries', async (req, res) => {
   } catch (err) {
     console.error('Error updating worksheet entry:', err);
     res.status(500).json({ error: 'Failed to update worksheet entry' });
+  }
+});
+
+// Stations endpoints
+app.get('/api/stations', async (req, res) => {
+  try {
+    console.log('GET /api/stations - Attempting to fetch stations');
+    
+    // Test database connection first
+    const testConnection = await pool.query('SELECT NOW()');
+    console.log('Database connection test successful:', testConnection.rows[0]);
+    
+    const result = await pool.query(
+      'SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)',
+      ['public', 'stations']
+    );
+    console.log('Checking if stations table exists:', result.rows[0]);
+
+    if (!result.rows[0].exists) {
+      console.log('Stations table does not exist, creating it now...');
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS stations (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          short_code VARCHAR(50) NOT NULL,
+          display_order INTEGER NOT NULL DEFAULT 0,
+          attributes JSONB NOT NULL DEFAULT '{
+              "maxEmployees": 1,
+              "color": "#808080",
+              "requiresCertification": [],
+              "overlapAllowed": false
+          }'::jsonb,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS stations_display_order_idx ON stations(display_order);
+        CREATE UNIQUE INDEX IF NOT EXISTS stations_short_code_idx ON stations(short_code);
+
+        -- Add trigger for updated_at
+        CREATE OR REPLACE FUNCTION update_stations_updated_at()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = CURRENT_TIMESTAMP;
+            RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+
+        CREATE TRIGGER update_stations_updated_at
+            BEFORE UPDATE ON stations
+            FOR EACH ROW
+            EXECUTE FUNCTION update_stations_updated_at();
+      `);
+      console.log('Stations table created successfully');
+    }
+
+    const stations = await pool.query('SELECT * FROM stations ORDER BY display_order');
+    console.log(`Found ${stations.rows.length} stations`);
+    res.json(stations.rows);
+  } catch (error) {
+    console.error('Error in GET /api/stations:', error);
+    res.status(500).json({ error: 'Failed to fetch stations', details: error.message });
+  }
+});
+
+app.post('/api/stations', async (req, res) => {
+  try {
+    const { name, short_code, attributes } = req.body;
+    
+    // Get the highest display_order
+    const orderResult = await pool.query(
+      'SELECT COALESCE(MAX(display_order), -1) + 1 as next_order FROM stations'
+    );
+    const nextOrder = orderResult.rows[0].next_order;
+
+    const result = await pool.query(
+      `INSERT INTO stations (name, short_code, display_order, attributes)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [name, short_code, nextOrder, attributes]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating station:', error);
+    if (error.constraint === 'stations_short_code_idx') {
+      res.status(400).json({ error: 'Short code must be unique' });
+    } else {
+      res.status(500).json({ error: 'Failed to create station' });
+    }
+  }
+});
+
+app.put('/api/stations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    const result = await pool.query(
+      `UPDATE stations 
+       SET name = COALESCE($1, name),
+           short_code = COALESCE($2, short_code),
+           attributes = stations.attributes || $3::jsonb
+       WHERE id = $4
+       RETURNING *`,
+      [updates.name, updates.short_code, updates.attributes || {}, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Station not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating station:', error);
+    if (error.constraint === 'stations_short_code_idx') {
+      res.status(400).json({ error: 'Short code must be unique' });
+    } else {
+      res.status(500).json({ error: 'Failed to update station' });
+    }
+  }
+});
+
+app.put('/api/stations/reorder', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    const { stations } = req.body;
+    for (const { id, order } of stations) {
+      await client.query(
+        'UPDATE stations SET display_order = $1 WHERE id = $2',
+        [order, id]
+      );
+    }
+    
+    await client.query('COMMIT');
+    
+    const result = await client.query(
+      'SELECT * FROM stations ORDER BY display_order'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error reordering stations:', error);
+    res.status(500).json({ error: 'Failed to reorder stations' });
+  } finally {
+    client.release();
+  }
+});
+
+app.delete('/api/stations/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    const { id } = req.params;
+    
+    // Get the current display_order
+    const orderResult = await client.query(
+      'SELECT display_order FROM stations WHERE id = $1',
+      [id]
+    );
+    
+    if (orderResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Station not found' });
+    }
+    
+    const currentOrder = orderResult.rows[0].display_order;
+    
+    // Delete the station
+    await client.query('DELETE FROM stations WHERE id = $1', [id]);
+    
+    // Update the display_order of remaining stations
+    await client.query(
+      'UPDATE stations SET display_order = display_order - 1 WHERE display_order > $1',
+      [currentOrder]
+    );
+    
+    await client.query('COMMIT');
+    res.json({ message: 'Station deleted successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting station:', error);
+    res.status(500).json({ error: 'Failed to delete station' });
+  } finally {
+    client.release();
   }
 });
 

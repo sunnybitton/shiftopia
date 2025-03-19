@@ -5,28 +5,35 @@
 }
 
 .week-header, .week-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   gap: 10px;
+  direction: rtl;
 }
 
 .day-header, .day-column {
-  flex: 1;
-  min-width: 120px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background: #fff;
+  text-align: right;
+  min-width: 120px;
 }
 
-.day-column.today {
-  background-color: #f0f7ff;
-  border-color: #0066cc;
+/* Set order for date and day columns */
+.date-column {
+  grid-column: 1;
+}
+
+.day-column {
+  grid-column: 2;
 }
 
 .stations-list-column {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  text-align: right;
 }
 
 .no-shift {
@@ -44,6 +51,7 @@
 .list-view {
   width: 100%;
   padding: 0;
+  direction: ltr;
 }
 
 .weekly-view {
@@ -51,6 +59,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   padding: 8px;
+  direction: ltr;
 }
 
 .day-card {
@@ -62,6 +71,7 @@
   flex-direction: column;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #eee;
+  text-align: right;
 }
 
 .day-card.current-day {
@@ -74,7 +84,7 @@
   border-bottom: 1px solid #eee;
   margin-bottom: 8px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -82,7 +92,7 @@
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  text-align: center;
+  text-align: left;
   width: 100%;
 }
 
@@ -91,6 +101,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  text-align: left;
 }
 
 .shift-item {
@@ -99,7 +110,7 @@
   background: #f5f7fa;
   border-radius: 4px;
   color: #39587F;
-  text-align: center;
+  text-align: left;
 }
 
 /* Add these classes to match the monthly view colors */
@@ -123,7 +134,7 @@
   font-size: 13px;
   font-style: italic;
   padding: 4px 8px;
-  text-align: center;
+  text-align: right;
 }
 
 /* Mobile styles */
@@ -159,7 +170,7 @@
     font-size: 14px;
     padding: 8px 12px;
     border-radius: 6px;
-    text-align: center;
+    text-align: right;
   }
 
   /* Keep the same colors in mobile view */
@@ -181,7 +192,7 @@
   .no-shift {
     font-size: 14px;
     padding: 8px 0;
-    text-align: center;
+    text-align: right;
   }
 
   /* Daily view specific styles */

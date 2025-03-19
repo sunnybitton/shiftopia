@@ -41,11 +41,13 @@ const Worksheets = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWorksheet, setSelectedWorksheet] = useState(null);
   const [worksheetEntries, setWorksheetEntries] = useState({});
+  const [stations, setStations] = useState([]);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isManager = user.role?.toLowerCase() === 'manager';
 
   useEffect(() => {
     fetchWorksheets();
+    fetchStations();
   }, []);
 
   useEffect(() => {
@@ -80,6 +82,19 @@ const Worksheets = () => {
       }));
     } catch (err) {
       console.error('Error fetching worksheet entries:', err);
+    }
+  };
+
+  const fetchStations = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/stations`);
+      if (!response.ok) throw new Error('Failed to fetch stations');
+      const data = await response.json();
+      // Sort stations by display_order
+      const sortedStations = data.sort((a, b) => a.display_order - b.display_order);
+      setStations(sortedStations);
+    } catch (err) {
+      console.error('Error fetching stations:', err);
     }
   };
 
@@ -123,6 +138,25 @@ const Worksheets = () => {
 
   const handleModalSubmit = async ({ month, year }) => {
     try {
+      // First fetch current stations
+      const stationsResponse = await fetch(`${import.meta.env.VITE_API_URL}/stations`);
+      if (!stationsResponse.ok) throw new Error('Failed to fetch stations');
+      const currentStations = await stationsResponse.json();
+      
+      // Sort stations by display_order and extract only the names
+      const sortedStationNames = currentStations
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+        .map(station => station.name);
+      
+      console.log('Creating worksheet with data:', {
+        month,
+        year,
+        name: `${month}_${year}`,
+        status: 'draft',
+        stations: sortedStationNames
+      });
+      
+      // Create worksheet with station names
       const response = await fetch(`${import.meta.env.VITE_API_URL}/worksheets`, {
         method: 'POST',
         headers: {
@@ -132,16 +166,26 @@ const Worksheets = () => {
           month,
           year,
           name: `${month}_${year}`,
-          status: 'draft'
+          status: 'draft',
+          stations: sortedStationNames
         }),
       });
-      if (!response.ok) throw new Error('Failed to create worksheet');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to create worksheet' }));
+        console.error('Server error:', errorData);
+        throw new Error(errorData.error || errorData.details || 'Failed to create worksheet');
+      }
+      
       const newWorksheet = await response.json();
+      console.log('Worksheet created:', newWorksheet);
       
       setWorksheets([...worksheets, newWorksheet]);
       setSelectedWorksheet(newWorksheet);
+      setIsModalOpen(false);
     } catch (err) {
       console.error('Error creating worksheet:', err);
+      alert(err.message || 'Failed to create worksheet');
     }
   };
 
@@ -280,9 +324,9 @@ const Worksheets = () => {
         <WorksheetTable
           month={selectedWorksheet.month}
           year={selectedWorksheet.year}
-          workstations={['Workstation 1', 'Workstation 2', 'Workstation 3']}
+          workstations={selectedWorksheet.stations || []}
           entries={worksheetEntries[selectedWorksheet.id] || []}
-          onCellUpdate={(day, workstation, value) => 
+          onCellUpdate={(day, workstation, value) =>
             handleCellUpdate(selectedWorksheet.id, day, workstation, value)
           }
           isEditable={isManager || selectedWorksheet.canEdit}
