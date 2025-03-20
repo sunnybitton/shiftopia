@@ -1,0 +1,139 @@
+SHIFTOPIA DATABASE GUIDE
+=====================
+
+Our database system is designed to manage work schedules and employee shifts. Here's a simple breakdown of how everything is organized:
+
+MAIN TABLES
+-----------
+
+1. USERS
+   - Stores all user information
+   - Fields:
+     * id: Unique identifier
+     * username: User's login name
+     * password: Encrypted password
+     * role: User's role (manager/employee)
+     * name: Full name
+     * email: Contact email
+
+2. STATIONS (Work Positions)
+   - Represents different work positions/stations
+   - Fields:
+     * id: Unique identifier
+     * name: Station name
+     * display_order: Order in which to show the station
+     * color: Color code for visual representation
+     * is_active: Whether the station is currently in use
+     * overlap_allowed: Whether multiple employees can be assigned to this station simultaneously
+     * max_employees: Maximum number of employees that can be assigned to this station at once
+     * required_certifications: List of certifications required to work at this station
+     * description: Optional description of the station and its requirements
+
+3. WORKSHEETS
+   - Represents monthly work schedules
+   - Fields:
+     * id: Unique identifier
+     * name: Worksheet name (usually month_year)
+     * month: Month number (1-12)
+     * year: Year
+     * status: Current status (draft/published)
+     * stations: List of stations included
+     * created_at: Creation timestamp
+     * updated_at: Last update timestamp
+
+4. WORKSHEET_ENTRIES
+   - Individual shift assignments
+   - Fields:
+     * id: Unique identifier
+     * worksheet_id: Links to the worksheet
+     * day: Day of the month (1-31)
+     * workstation: Station name
+     * employee_assigned: Assigned employee's name
+     * created_at: Creation timestamp
+     * updated_at: Last update timestamp
+
+5. CERTIFICATIONS
+   - Stores certification types and requirements
+   - Fields:
+     * id: Unique identifier
+     * name: Certification name
+     * description: Detailed description of the certification
+     * validity_period: How long the certification is valid (in months)
+     * is_required: Whether this is a mandatory certification
+
+6. USER_CERTIFICATIONS
+   - Links users with their certifications
+   - Fields:
+     * id: Unique identifier
+     * user_id: Reference to the user
+     * certification_id: Reference to the certification
+     * date_obtained: When the certification was received
+     * expiry_date: When the certification expires
+     * status: Current status (active/expired/pending)
+     * document_url: Optional link to certification document
+
+RELATIONSHIPS
+------------
+- Each WORKSHEET has multiple WORKSHEET_ENTRIES
+- STATIONS are referenced in both WORKSHEETS and WORKSHEET_ENTRIES
+- USERS can be assigned to shifts in WORKSHEET_ENTRIES
+- USERS can have multiple CERTIFICATIONS
+- STATIONS can require specific CERTIFICATIONS
+- System validates that users have required certifications before assignment
+
+KEY FEATURES
+-----------
+1. Real-time Updates
+   - Changes to worksheets are saved immediately
+   - Multiple users can view updates in real-time
+
+2. Data Validation
+   - Prevents duplicate assignments
+   - Ensures valid dates and stations
+   - Validates user permissions
+
+3. History Tracking
+   - Keeps track of when entries are created and modified
+   - Maintains audit trail of changes
+
+SECURITY
+--------
+- Passwords are encrypted
+- Role-based access control
+- Only managers can create/edit worksheets
+- Regular employees can only view published worksheets
+
+BEST PRACTICES
+-------------
+1. Always use the provided API endpoints
+2. Don't modify database directly
+3. Keep worksheet names consistent (month_year format)
+4. Regularly check for inactive stations
+5. Use proper error handling when making database changes
+
+API ENDPOINTS
+------------
+1. Users:
+   - GET /users
+   - POST /users
+   - PUT /users/:id
+
+2. Stations:
+   - GET /stations
+   - POST /stations
+   - PUT /stations/:id
+   - DELETE /stations/:id
+
+3. Worksheets:
+   - GET /worksheets
+   - POST /worksheets
+   - PUT /worksheets/:id
+   - DELETE /worksheets/:id
+
+4. Worksheet Entries:
+   - GET /worksheets/:id/entries
+   - POST /worksheets/:id/entries
+   - PUT /worksheets/:id/entries/:entryId
+   - DELETE /worksheets/:id/entries/:entryId
+
+Remember: The database is designed to be simple but powerful, focusing on maintaining data integrity while providing flexibility for schedule management. 
