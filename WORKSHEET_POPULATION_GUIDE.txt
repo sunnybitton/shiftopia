@@ -1,0 +1,136 @@
+MANUAL WORKSHEET POPULATION GUIDE
+==============================
+
+OVERVIEW
+--------
+When populating a worksheet manually, we need to consider several factors to ensure efficient and error-free scheduling:
+1. Station requirements
+2. Employee certifications
+3. Overlap rules
+4. Maximum employee limits
+
+STEP-BY-STEP PROCESS
+-------------------
+
+1. PREPARATION
+   - Ensure all stations are properly configured with:
+     * Required certifications
+     * Maximum employees allowed
+     * Overlap settings
+     * Color coding for visual organization
+   
+   - Have ready access to:
+     * List of available employees
+     * Employee certifications
+     * Employee availability
+
+2. POPULATION STRATEGY
+   A. Priority-Based Approach
+      1. Fill critical stations first
+      2. Assign certified employees to specialized positions
+      3. Fill remaining stations based on availability
+   
+   B. Time-Based Approach
+      1. Complete one day at a time
+      2. Ensure proper coverage across all shifts
+      3. Check for overlap compliance
+
+3. VALIDATION CHECKS
+   For each assignment, verify:
+   - Employee has required certifications
+   - Station's maximum employee limit isn't exceeded
+   - Overlap rules are followed
+   - Employee isn't double-booked
+   - Required rest periods are maintained
+
+4. BEST PRACTICES
+   - Use color coding to identify different stations quickly
+   - Fill in patterns first (regular assignments)
+   - Handle exceptions and special cases last
+   - Save progress frequently
+   - Review assignments for each day before moving to next
+   - Use the worksheet's built-in validation features
+
+5. COMMON PITFALLS TO AVOID
+   - Don't exceed station's max employee limit
+   - Don't assign uncertified employees to specialized stations
+   - Don't create scheduling conflicts
+   - Don't forget to check overlap rules
+   - Don't ignore required rest periods
+
+6. WORKFLOW RECOMMENDATIONS
+   A. Order of Operations
+      1. Set up station configurations first
+      2. Fill in regular/recurring assignments
+      3. Add special assignments
+      4. Fill gaps with available employees
+      5. Review and adjust
+
+   B. Visual Organization
+      - Use station colors consistently
+      - Group similar stations together
+      - Mark completed days/sections
+      - Flag potential conflicts
+
+7. VALIDATION PROCESS
+   Before Publishing:
+   - Check all required positions are filled
+   - Verify certification requirements
+   - Review employee workload distribution
+   - Check for scheduling conflicts
+   - Ensure overlap rules are followed
+   - Verify maximum employee limits
+
+8. EMERGENCY HANDLING
+   Have a plan for:
+   - Last-minute changes
+   - Sick leave coverage
+   - Certification expiration
+   - Special events or peak times
+
+API USAGE
+---------
+1. Check Employee Availability:
+   GET /users/:id/availability?month={month}&year={year}
+
+2. Verify Certifications:
+   GET /users/:id/certifications
+
+3. Update Worksheet Entry:
+   PUT /worksheets/:id/entries/:entryId
+   {
+     "day": number,
+     "workstation": string,
+     "employee_assigned": string
+   }
+
+4. Batch Update Multiple Entries:
+   POST /worksheets/:id/entries/batch
+   {
+     "entries": [
+       {
+         "day": number,
+         "workstation": string,
+         "employee_assigned": string
+       }
+     ]
+   }
+
+SHORTCUTS AND TIPS
+-----------------
+1. Quick Entry:
+   - Use Tab key to move between cells
+   - Use Enter to confirm entries
+   - Use arrow keys for navigation
+
+2. Bulk Operations:
+   - Copy/paste similar patterns
+   - Use batch update for recurring assignments
+   - Apply filters to view specific stations/days
+
+3. Visual Aids:
+   - Use station colors for quick identification
+   - Enable validation highlighting
+   - Use conflict warnings
+
+Remember: Take your time with initial setup - good preparation makes the population process much smoother and reduces errors. 

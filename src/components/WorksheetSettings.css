@@ -18,7 +18,7 @@
 
 .stations-header {
   display: grid;
-  grid-template-columns: 80px 200px 150px 1fr 80px;
+  grid-template-columns: 80px 200px 150px 1fr 60px;
   gap: 10px;
   padding: 15px;
   background: #f5f5f5;
@@ -29,7 +29,7 @@
 
 .station-row {
   display: grid;
-  grid-template-columns: 80px 200px 150px 1fr 80px;
+  grid-template-columns: 80px 200px 150px 1fr 60px;
   gap: 10px;
   padding: 15px;
   border-bottom: 1px solid #eee;
@@ -84,13 +84,15 @@
 .station-attributes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 16px;
+  padding-right: 20px;
 }
 
 .attribute {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .attribute label {
@@ -118,17 +120,31 @@
   cursor: pointer;
 }
 
-.color-picker-popover {
-  position: absolute;
-  z-index: 2;
+.color-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 200px;
 }
 
-.color-picker-cover {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+.color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border: 2px solid #333;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ddd;
 }
 
 .delete-button {
@@ -174,4 +190,20 @@
   background: #fff1f1;
   border-radius: 4px;
   margin: 20px 0;
+}
+
+/* Remove old color picker styles */
+.color-picker-popover {
+  display: none;
+}
+
+.color-picker-cover {
+  display: none;
+}
+
+.actions-column {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 8px;
 } 

@@ -28,6 +28,16 @@ const WorksheetSettings = () => {
   const [showColorPicker, setShowColorPicker] = useState(null);
   const [editingAttribute, setEditingAttribute] = useState(null);
 
+  const STATION_COLORS = [
+    '#FFFFFF', // White (default)
+    '#FFB6C1', // Light pink
+    '#98FB98', // Light green
+    '#87CEEB', // Sky blue
+    '#DDA0DD', // Plum
+    '#F0E68C', // Khaki
+    '#FFA07A', // Light salmon
+  ];
+
   useEffect(() => {
     fetchStations();
   }, []);
@@ -112,7 +122,7 @@ const WorksheetSettings = () => {
           short_code: 'NEW',
           attributes: {
             maxEmployees: 1,
-            color: '#808080',
+            color: '#FFFFFF',  // Set white as default
             requiresCertification: [],
             overlapAllowed: false
           }
@@ -128,7 +138,10 @@ const WorksheetSettings = () => {
   };
 
   const renderAttributes = (station) => {
-    const attrs = station.attributes;
+    const attrs = station.attributes || {};
+    // Ensure color has a default value of white
+    attrs.color = attrs.color || '#FFFFFF';
+    
     return (
       <div className="station-attributes">
         <div className="attribute">
@@ -147,22 +160,19 @@ const WorksheetSettings = () => {
 
         <div className="attribute">
           <label>Color:</label>
-          <div 
-            className="color-preview"
-            style={{ backgroundColor: attrs.color }}
-            onClick={() => setShowColorPicker(station.id)}
-          />
-          {showColorPicker === station.id && (
-            <div className="color-picker-popover">
-              <div className="color-picker-cover" onClick={() => setShowColorPicker(null)} />
-              <ChromePicker
-                color={attrs.color}
-                onChange={(color) => handleUpdateStation(station.id, {
-                  attributes: { ...attrs, color: color.hex }
+          <div className="color-selector">
+            {STATION_COLORS.map((color) => (
+              <div
+                key={color}
+                className={`color-option ${attrs.color === color ? 'selected' : ''}`}
+                style={{ backgroundColor: color }}
+                onClick={() => handleUpdateStation(station.id, {
+                  attributes: { ...attrs, color: color }
                 })}
+                title={color === '#FFFFFF' ? 'Default (White)' : color}
               />
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         <div className="attribute">

@@ -215,9 +215,15 @@ const Worksheets = () => {
     }
   };
 
-  const handleCellUpdate = async (worksheetId, day, workstation, value) => {
+  const handleCellUpdate = async (day, workstation, value) => {
+    if (!selectedWorksheet?.id) {
+      console.error('No worksheet selected');
+      return;
+    }
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/worksheets/${worksheetId}/entries`, {
+      console.log('Updating cell:', { day, workstation, value });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/worksheets/${selectedWorksheet.id}/entries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,19 +234,36 @@ const Worksheets = () => {
           employee_assigned: value
         }),
       });
-      if (!response.ok) throw new Error('Failed to update worksheet entry');
+
+      if (!response.ok) {
+        throw new Error('Failed to update worksheet entry');
+      }
       
       const updatedEntry = await response.json();
-      setWorksheetEntries(prev => ({
-        ...prev,
-        [worksheetId]: prev[worksheetId].map(entry => 
-          entry.day === day && entry.workstation === workstation
-            ? updatedEntry
-            : entry
-        )
-      }));
+      
+      // Update the local state with the new entry
+      setWorksheetEntries(prev => {
+        const worksheetId = selectedWorksheet.id;
+        const currentEntries = prev[worksheetId] || [];
+        const entryIndex = currentEntries.findIndex(
+          entry => entry.day === day && entry.workstation === workstation
+        );
+
+        const newEntries = [...currentEntries];
+        if (entryIndex >= 0) {
+          newEntries[entryIndex] = updatedEntry;
+        } else {
+          newEntries.push(updatedEntry);
+        }
+
+        return {
+          ...prev,
+          [worksheetId]: newEntries
+        };
+      });
     } catch (err) {
       console.error('Error updating worksheet entry:', err);
+      throw err; // Re-throw to let the child components handle the error
     }
   };
 
@@ -327,7 +350,7 @@ const Worksheets = () => {
           workstations={selectedWorksheet.stations || []}
           entries={worksheetEntries[selectedWorksheet.id] || []}
           onCellUpdate={(day, workstation, value) =>
-            handleCellUpdate(selectedWorksheet.id, day, workstation, value)
+            handleCellUpdate(day, workstation, value)
           }
           isEditable={isManager || selectedWorksheet.canEdit}
         />

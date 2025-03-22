@@ -5,40 +5,154 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  max-width: 100%;
+  display: block; /* Force block context for proper scrolling */
 }
 
 .worksheet-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  table-layout: auto;
 }
 
 .worksheet-table th,
 .worksheet-table td {
-  padding: 1rem;
+  border: 1px solid #ddd;
+  padding: 8px;
   text-align: center;
-  border: 1px solid #eee;
+  position: relative;
+  color: #000; /* Ensure text is black */
 }
 
 .worksheet-table th {
   background-color: #f8f9fa;
-  font-weight: 500;
-  color: #333;
+  font-weight: 600;
+  min-width: 150px;
+}
+
+.worksheet-table td {
+  min-height: 60px;
+  vertical-align: top;
+}
+
+/* Apply overlay only to table cells, not headers */
+.worksheet-table td::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+/* Keep first two columns (date and day) white */
+.worksheet-table th:nth-child(-n+2),
+.worksheet-table td:nth-child(-n+2) {
+  background-color: #fff !important;
+}
+
+.worksheet-table td:nth-child(-n+2)::after {
+  display: none;
+}
+
+.day-cell,
+.weekday-cell {
+  width: 2em;
+  background-color: #fff;
+  font-weight: 600;
+}
+
+.hebrew-letter {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+/* First two columns only */
+.worksheet-table th:first-child,
+.worksheet-table td:first-child,
+.worksheet-table th:nth-child(2),
+.worksheet-table td:nth-child(2) {
+  width: 4em !important;
+  min-width: 4em !important;
+  max-width: 4em !important;
+  padding: 4px 0 !important;
+  text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+}
+
+/* All other columns */
+.worksheet-table th:not(:first-child):not(:nth-child(2)),
+.worksheet-table td:not(:first-child):not(:nth-child(2)) {
+  min-width: 150px;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px;
+}
+
+.worksheet-table td .cell-input {
+  width: 100%;
+  min-width: 230px;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: right;
+  direction: rtl;
+}
+
+/* Style for multiple employee names in a cell */
+.employee-list {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  min-height: 24px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.employee-name-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e8f0fe;
+  border: 1px solid #c0d8f7;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative; /* Add this */
+  z-index: 1; /* Add this to ensure it's above the overlay */
+  color: #000; /* Ensure text is black */
+}
+
+/* Dropdown styling */
+.employee-dropdown {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  width: 200px;
+  z-index: 1000;
+}
+
+.employee-option {
+  padding: 8px;
+  cursor: pointer;
+  text-align: right;
+}
+
+.employee-option:hover {
+  background-color: #f5f5f5;
 }
 
 .worksheet-table tbody tr:hover {
   background-color: #f8f9fa;
-}
-
-.cell-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  text-align: center;
-  transition: all 0.2s;
 }
 
 .cell-input:hover {
@@ -51,28 +165,9 @@
   box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
 }
 
-.weekday-cell {
-  white-space: nowrap;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.hebrew-letter {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #39587F;
-}
-
 .weekday-name {
   font-size: 0.8rem;
   color: #666;
-}
-
-.day-cell {
-  font-weight: 500;
-  color: #333;
 }
 
 /* RTL specific styles */
