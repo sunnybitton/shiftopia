@@ -23,6 +23,7 @@ const Schedule = () => {
   // Get logged-in user's info
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userName = user.name || '';
+  const userUsername = user.username || '';
   const isManager = user.role?.toLowerCase() === 'manager';
 
   // Memoize the employee and month lists
@@ -35,27 +36,32 @@ const Schedule = () => {
       try {
         setLoading(true);
         
-        // Fetch employee data from employee_data sheet
-        const employeeData = await fetchSheetData('employee_data');
+        // Fetch employees from our API
+        const employeesResponse = await fetch(`${import.meta.env.VITE_API_URL}/employees`);
+        if (!employeesResponse.ok) throw new Error('Failed to fetch employees');
+        const employeesData = await employeesResponse.json();
         
         if (isManager) {
           // For managers: show all employee usernames
-          const employeeNames = employeeData.slice(1)
-            .map(row => row[6])  // userName is in column index 6
-            .filter(Boolean);    // Remove any empty values
-          setEmployees(employeeNames);
+          const employeeUsernames = employeesData.map(emp => emp.username);
+          setEmployees(employeeUsernames);
         } else {
           // For regular employees: only show their own username
-          setEmployees([userName]);
-          setSelectedEmployee(userName); // Auto-select the employee
+          setEmployees([userUsername]);
+          setSelectedEmployee(userUsername); // Auto-select the employee
         }
         
-        // Get months from the schedule sheet
-        const data = await fetchSheetData();
-        const monthsList = data.slice(1)
-          .map(row => row[10])
-          .filter(Boolean);
-        setMonths(monthsList);
+        // Fetch published worksheets from our API
+        const worksheetsResponse = await fetch(`${import.meta.env.VITE_API_URL}/worksheets`);
+        if (!worksheetsResponse.ok) throw new Error('Failed to fetch worksheets');
+        const worksheetsData = await worksheetsResponse.json();
+        
+        // Filter for published worksheets and format their names
+        const publishedMonths = worksheetsData
+          .filter(worksheet => worksheet.status === 'published')
+          .map(worksheet => worksheet.name); // This will be in the format "Month Year"
+        
+        setMonths(publishedMonths);
         
       } catch (error) {
         console.error('Error initializing data:', error);
@@ -112,9 +118,9 @@ const Schedule = () => {
     const schedule = {};
     const stationNames = data[3] || [];
     
-    // Get the username from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const username = user.username;
+    // Log the data we're working with
+    console.log('Processing schedule data for employee:', selectedEmployee);
+    console.log('Station names:', stationNames);
     
     // Process only rows 5-36 (days data)
     for (let rowIndex = 5; rowIndex < Math.min(36, data.length); rowIndex++) {
@@ -128,9 +134,12 @@ const Schedule = () => {
       
       // Start from index 3 for station columns
       for (let i = 3; i < row.length; i++) {
-        // Compare with username exactly
+        // Get the cell value and clean it
         const cellValue = row[i]?.toString().trim() || '';
-        if (cellValue === username && stationNames[i]) {
+        console.log(`Day ${dayNumber}, Station ${i}:`, cellValue);
+        
+        // Compare with selected employee's username (case-insensitive)
+        if (cellValue.toLowerCase() === selectedEmployee.toLowerCase() && stationNames[i]) {
           stations.push(stationNames[i]);
         }
       }
@@ -140,6 +149,7 @@ const Schedule = () => {
       }
     }
     
+    console.log('Processed schedule:', schedule);
     return schedule;
   };
 
@@ -184,7 +194,7 @@ const Schedule = () => {
 
   // Get current date info
   const currentDate = new Date();
-  const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
+  const currentMonthName = currentDate.toLocaleString('en-US', { month: 'long' });
   const currentYear = currentDate.getFullYear();
   const currentMonthString = `${currentMonthName} ${currentYear}`;
 
@@ -195,9 +205,9 @@ const Schedule = () => {
       setError(null);
       setCurrentView(newView || currentView);
       
+      // Convert current month to sheet name format (e.g., "3-2025")
       const monthNumber = currentDate.getMonth() + 1;
-      const year = currentDate.getFullYear();
-      const sheetName = `${monthNumber}-${year}`;
+      const sheetName = `${monthNumber}-${currentYear}`;
       
       console.log('Loading schedule for:', sheetName);
       const data = await fetchSheetData(sheetName);
@@ -206,11 +216,11 @@ const Schedule = () => {
         throw new Error(`No schedule available for ${currentMonthString}`);
       }
       
-      console.log('Processing data for user:', userName);
-      const processedData = processScheduleData(data, userName);
+      console.log('Processing data for user:', userUsername);
+      const processedData = processScheduleData(data, userUsername);
       
       if (Object.keys(processedData).length === 0) {
-        throw new Error(`No shifts found for ${userName} in ${currentMonthString}`);
+        throw new Error(`No shifts found for ${userUsername} in ${currentMonthString}`);
       }
       
       setScheduleData(processedData);
@@ -240,14 +250,13 @@ const Schedule = () => {
     
     if (activeTab === 'current') {
       // Set selected month to current month when in current tab
-      const currentMonthString = `${currentMonthName} ${currentYear}`;
       setSelectedMonth(currentMonthString);
       loadCurrentSchedule('monthly');
     } else {
       // Only reset selected month when switching to other months tab
       setSelectedMonth('');
     }
-  }, [activeTab, currentMonthName, currentYear]); // Add dependencies
+  }, [activeTab, currentMonthString]); // Update dependencies
 
   if (loading) {
     return <LoadingSpinner text="Loading schedule..." />;
