@@ -66,6 +66,15 @@
   color: #ff3b30;
 }
 
+.download-button {
+  color: #39587F;
+  margin-right: 0.5rem;
+}
+
+.download-button:hover {
+  color: #2c4361;
+}
+
 .worksheets-list {
   display: flex;
   flex-direction: column;

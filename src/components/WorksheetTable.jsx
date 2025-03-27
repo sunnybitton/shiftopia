@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { usePDF } from 'react-to-pdf';
 import WorksheetCell from './WorksheetCell';
 import './WorksheetTable.css';
+
+const hebrewWeekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const hebrewMonths = [
+  'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+  'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+];
 
 const WorksheetTable = ({ 
   month, 
@@ -8,12 +15,22 @@ const WorksheetTable = ({
   workstations = [],
   entries = [],
   onCellUpdate,
-  isEditable = false
-}) => {
+  isEditable = false,
+  onDownloadStart,
+  onDownloadComplete
+}, ref) => {
   const [availableEmployees, setAvailableEmployees] = useState([]);
   const [stationConfigs, setStationConfigs] = useState([]);
   const [localEntries, setLocalEntries] = useState({});
-  const hebrewWeekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+  const tableRef = useRef(null);
+  const { toPDF } = usePDF({
+    filename: `worksheet-${hebrewMonths[month-1]}-${year}.pdf`,
+    page: {
+      margin: 20,
+      format: 'a3',
+      orientation: 'landscape'
+    }
+  });
 
   // Initialize local entries from props
   useEffect(() => {
@@ -119,52 +136,99 @@ const WorksheetTable = ({
   // Ensure workstations is always an array
   const stationsInOrder = Array.isArray(workstations) ? workstations : [];
 
+  // Handle PDF download
+  const handleDownloadPDF = useCallback(async () => {
+    try {
+      if (onDownloadStart) {
+        onDownloadStart();
+      }
+
+      if (!tableRef.current) {
+        throw new Error('Table not ready for PDF generation');
+      }
+
+      const options = {
+        filename: `worksheet-${hebrewMonths[month-1]}-${year}.pdf`,
+        page: {
+          margin: 20,
+          format: 'a3',
+          orientation: 'landscape'
+        },
+        method: 'save'
+      };
+
+      await toPDF(tableRef.current, options);
+      
+      if (onDownloadComplete) {
+        onDownloadComplete();
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+      if (onDownloadComplete) {
+        onDownloadComplete(error);
+      }
+    }
+  }, [toPDF, month, year, onDownloadStart, onDownloadComplete]);
+
+  // Expose the download function to parent
+  React.useImperativeHandle(ref, () => ({
+    downloadPDF: handleDownloadPDF
+  }), [handleDownloadPDF]);
+
   return (
-    <div className="worksheet-table-container" dir="rtl">
-      <table className="worksheet-table">
-        <thead>
-          <tr>
-            <th>תאריך</th>
-            <th>יום</th>
-            {stationsInOrder.map(station => (
-              <th 
-                key={station}
-                style={{ backgroundColor: getStationColor(station) }}
-              >
-                {station}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {days.map(({ day, hebrewWeekday }) => (
-            <tr key={day}>
-              <td className="day-cell">{day}</td>
-              <td className="weekday-cell">
-                <span className="hebrew-letter">{hebrewWeekday}</span>
-              </td>
+    <div className="worksheet-container">
+      <div className="worksheet-header">
+        <h2 className="worksheet-title">
+          {`${hebrewMonths[month-1]} ${year}`}
+        </h2>
+      </div>
+      <div className="worksheet-table-container" dir="rtl" ref={tableRef}>
+        <table className="worksheet-table">
+          <thead>
+            <tr>
+              <th>תאריך</th>
+              <th>יום</th>
               {stationsInOrder.map(station => (
-                <td 
-                  key={`${day}-${station}`}
+                <th 
+                  key={station}
                   style={{ backgroundColor: getStationColor(station) }}
                 >
-                  <WorksheetCell
-                    day={day}
-                    station={station}
-                    value={localEntries[`${day}-${station}`] || ''}
-                    onChange={handleCellUpdate}
-                    isEditable={isEditable}
-                    availableEmployees={availableEmployees}
-                    stations={stationConfigs}
-                  />
-                </td>
+                  {station}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {days.map(({ day, hebrewWeekday }) => (
+              <tr key={day}>
+                <td className="day-cell">{day}</td>
+                <td className="weekday-cell">
+                  <span className="hebrew-letter">{hebrewWeekday}</span>
+                </td>
+                {stationsInOrder.map(station => (
+                  <td 
+                    key={`${day}-${station}`}
+                    style={{ backgroundColor: getStationColor(station) }}
+                  >
+                    <WorksheetCell
+                      day={day}
+                      station={station}
+                      value={localEntries[`${day}-${station}`] || ''}
+                      onChange={handleCellUpdate}
+                      isEditable={isEditable}
+                      availableEmployees={availableEmployees}
+                      stations={stationConfigs}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-export default WorksheetTable; 
+export default React.forwardRef(WorksheetTable); 

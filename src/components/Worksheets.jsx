@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import NewWorksheetModal from './NewWorksheetModal';
 import WorksheetTable from './WorksheetTable';
@@ -34,6 +34,14 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const DownloadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+    <polyline points="7 10 12 15 17 10"></polyline>
+    <line x1="12" y1="15" x2="12" y2="3"></line>
+  </svg>
+);
+
 const Worksheets = () => {
   const [worksheets, setWorksheets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +52,8 @@ const Worksheets = () => {
   const [stations, setStations] = useState([]);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isManager = user.role?.toLowerCase() === 'manager';
+  const [isDownloading, setIsDownloading] = useState(false);
+  const worksheetTableRef = useRef(null);
 
   useEffect(() => {
     fetchWorksheets();
@@ -148,10 +158,17 @@ const Worksheets = () => {
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
         .map(station => station.name);
       
+      // Convert month number to month name
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      const monthName = monthNames[month - 1];
+      
       console.log('Creating worksheet with data:', {
         month,
         year,
-        name: `${month}_${year}`,
+        name: `${monthName} ${year}`,
         status: 'draft',
         stations: sortedStationNames
       });
@@ -165,7 +182,7 @@ const Worksheets = () => {
         body: JSON.stringify({
           month,
           year,
-          name: `${month}_${year}`,
+          name: `${monthName} ${year}`,
           status: 'draft',
           stations: sortedStationNames
         }),
@@ -267,6 +284,43 @@ const Worksheets = () => {
     }
   };
 
+  const handleDownloadPDF = async (worksheet, event) => {
+    try {
+      // Prevent the default view behavior
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      // First select the worksheet
+      setSelectedWorksheet(worksheet);
+      
+      // Wait for the worksheet to be loaded and rendered
+      await new Promise(resolve => {
+        setTimeout(resolve, 500); // Give time for the worksheet to render
+      });
+
+      // Then trigger the PDF download
+      if (worksheetTableRef.current) {
+        await worksheetTableRef.current.downloadPDF();
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    }
+  };
+
+  const handleDownloadStart = () => {
+    setIsDownloading(true);
+  };
+
+  const handleDownloadComplete = (error) => {
+    setIsDownloading(false);
+    if (error) {
+      console.error('Error in PDF download:', error);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner text="Loading worksheets..." />;
   }
@@ -307,6 +361,13 @@ const Worksheets = () => {
               >
                 <ViewIcon />
               </button>
+              <button 
+                className="icon-button download-button"
+                onClick={(e) => handleDownloadPDF(worksheet, e)}
+                title="Download PDF"
+              >
+                <DownloadIcon />
+              </button>
               {(isManager || worksheet.canEdit) && (
                 <button 
                   className="icon-button edit-button"
@@ -345,14 +406,15 @@ const Worksheets = () => {
 
       {selectedWorksheet && (
         <WorksheetTable
+          ref={worksheetTableRef}
           month={selectedWorksheet.month}
           year={selectedWorksheet.year}
           workstations={selectedWorksheet.stations || []}
           entries={worksheetEntries[selectedWorksheet.id] || []}
-          onCellUpdate={(day, workstation, value) =>
-            handleCellUpdate(day, workstation, value)
-          }
+          onCellUpdate={handleCellUpdate}
           isEditable={isManager || selectedWorksheet.canEdit}
+          onDownloadStart={handleDownloadStart}
+          onDownloadComplete={handleDownloadComplete}
         />
       )}
 
