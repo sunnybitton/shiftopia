@@ -14,6 +14,7 @@ const WorksheetCell = ({
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  const cellRef = useRef(null);
 
   // Parse the value into an array of employees
   const currentEmployees = useMemo(() => {
@@ -60,23 +61,20 @@ const WorksheetCell = ({
     });
   }, [availableEmployees, searchTerm, currentEmployees, maxEmployees]);
 
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!isOpen) return;
-      
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
-          inputRef.current && !inputRef.current.contains(event.target)) {
-        setIsOpen(false);
-        setSearchTerm('');
+  // Handle input focus
+  const handleFocus = useCallback(() => {
+    if (isEditable) {
+      if (maxEmployees !== Infinity && currentEmployees.length >= maxEmployees) {
+        alert(`Maximum limit of ${maxEmployees} employees reached for this station.`);
+        return;
       }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+      setIsOpen(true);
+      // Add class to parent cell when dropdown is open
+      if (cellRef.current) {
+        cellRef.current.classList.add('has-dropdown');
+      }
+    }
+  }, [isEditable, currentEmployees.length, maxEmployees]);
 
   // Handle employee selection
   const handleSelect = useCallback(async (employeeUsername) => {
@@ -91,6 +89,10 @@ const WorksheetCell = ({
       await onChange(day, station, updatedEmployees.join(','));
       setIsOpen(false);
       setSearchTerm('');
+      // Remove class from parent cell when dropdown is closed
+      if (cellRef.current) {
+        cellRef.current.classList.remove('has-dropdown');
+      }
     } catch (error) {
       console.error('Failed to add employee:', error);
       alert('Failed to add employee. Please try again.');
@@ -108,17 +110,6 @@ const WorksheetCell = ({
     }
   }, [day, station, onChange, currentEmployees]);
 
-  // Handle input focus
-  const handleFocus = useCallback(() => {
-    if (isEditable) {
-      if (maxEmployees !== Infinity && currentEmployees.length >= maxEmployees) {
-        alert(`Maximum limit of ${maxEmployees} employees reached for this station.`);
-        return;
-      }
-      setIsOpen(true);
-    }
-  }, [isEditable, currentEmployees.length, maxEmployees]);
-
   // Handle input change for search
   const handleInputChange = useCallback((e) => {
     const newSearchTerm = e.target.value;
@@ -126,10 +117,48 @@ const WorksheetCell = ({
     setIsOpen(true);
   }, []);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!isOpen) return;
+      
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          inputRef.current && !inputRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm('');
+        // Remove class from parent cell when dropdown is closed
+        if (cellRef.current) {
+          cellRef.current.classList.remove('has-dropdown');
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Update dropdown position when it opens
+  useEffect(() => {
+    if (isOpen && cellRef.current && dropdownRef.current) {
+      const cellRect = cellRef.current.getBoundingClientRect();
+      const dropdown = dropdownRef.current;
+      
+      // Position the dropdown below the cell
+      dropdown.style.position = 'fixed';
+      dropdown.style.top = `${cellRect.bottom + window.scrollY}px`;
+      dropdown.style.right = `${window.innerWidth - cellRect.right}px`;
+      dropdown.style.width = `${cellRect.width}px`;
+      dropdown.style.maxHeight = '200px';
+      dropdown.style.zIndex = '99999';
+    }
+  }, [isOpen]);
+
   const filteredEmployees = getFilteredEmployees();
 
   return (
-    <div className="worksheet-cell">
+    <div className="worksheet-cell" ref={cellRef}>
       <div className="employee-list">
         {currentEmployees.map((employeeName, index) => (
           <div key={`${employeeName}-${index}`} className="employee-name-tag">

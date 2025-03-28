@@ -1,21 +1,27 @@
 .worksheet-container {
   width: 100%;
-  margin-top: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  direction: rtl;
+  position: relative;
 }
 
 .worksheet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
   padding: 0 20px;
 }
 
 .worksheet-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
   margin: 0;
+  font-size: 24px;
+  color: #333;
 }
 
 .download-pdf-button {
@@ -40,206 +46,304 @@
   font-size: 1.2rem;
 }
 
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.zoom-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background-color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #39587F;
+  transition: all 0.2s ease;
+}
+
+.zoom-button:hover:not(:disabled) {
+  background-color: #e8f0fe;
+  color: #2c4361;
+}
+
+.zoom-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-level {
+  min-width: 60px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+}
+
+.zoom-level:hover {
+  color: #39587F;
+}
+
 .worksheet-table-container {
-  width: 100%;
-  overflow-x: auto;
-  margin-top: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  max-width: 100%;
-  display: block; /* Force block context for proper scrolling */
+  width: calc(100% - 40px);
+  margin: 0 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: auto;
+  position: relative;
+  direction: rtl;
+}
+
+.table-content {
+  min-width: 100%;
+  position: relative;
+  transition: transform 0.2s ease;
+  transform-origin: right top;
 }
 
 .worksheet-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
+  direction: rtl;
 }
 
 .worksheet-table th,
 .worksheet-table td {
-  border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
+  border: 1px solid #e0e0e0;
   position: relative;
-  color: #000; /* Ensure text is black */
+  white-space: nowrap;
 }
 
 .worksheet-table th {
-  background-color: #f8f9fa;
+  background-color: #f5f5f5;
   font-weight: 600;
-  min-width: 150px;
-}
-
-.worksheet-table td {
-  min-height: 60px;
-  vertical-align: top;
-}
-
-/* Apply overlay only to table cells, not headers */
-.worksheet-table td::after {
-  content: '';
-  position: absolute;
+  color: #333;
+  min-width: 120px;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
+  z-index: 3;
 }
 
-/* Keep first two columns (date and day) white */
-.worksheet-table th:nth-child(-n+2),
-.worksheet-table td:nth-child(-n+2) {
-  background-color: #fff !important;
-}
-
-.worksheet-table td:nth-child(-n+2)::after {
-  display: none;
-}
-
-.day-cell,
-.weekday-cell {
-  width: 2em;
-  background-color: #fff;
-  font-weight: 600;
-}
-
-.hebrew-letter {
-  font-size: 1.2em;
-  font-weight: bold;
-}
-
-/* First two columns only */
+/* First two columns (date and day) */
 .worksheet-table th:first-child,
 .worksheet-table td:first-child,
 .worksheet-table th:nth-child(2),
 .worksheet-table td:nth-child(2) {
-  width: 4em !important;
-  min-width: 4em !important;
-  max-width: 4em !important;
-  padding: 4px 0 !important;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
+  width: 3em;
+  min-width: 3em;
+  background-color: #f9f9f9;
+  font-weight: 500;
+  position: sticky;
+  z-index: 2;
 }
 
-/* All other columns */
+.worksheet-table th:first-child,
+.worksheet-table th:nth-child(2) {
+  right: 0;
+  z-index: 4;
+}
+
+.worksheet-table td:first-child {
+  right: 0;
+}
+
+.worksheet-table td:nth-child(2) {
+  right: 3em;
+}
+
+/* Station columns */
 .worksheet-table th:not(:first-child):not(:nth-child(2)),
 .worksheet-table td:not(:first-child):not(:nth-child(2)) {
   min-width: 150px;
-  width: auto;
-  white-space: nowrap;
-  padding: 8px;
 }
 
-.worksheet-table td .cell-input {
-  width: 100%;
-  min-width: 230px;
-  padding: 4px;
-  border: 1px solid #ddd;
+/* Scrollbar styling */
+.worksheet-table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.worksheet-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 4px;
-  text-align: right;
-  direction: rtl;
 }
 
-/* Style for multiple employee names in a cell */
-.employee-list {
+.worksheet-table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.worksheet-table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.worksheet-table td {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.worksheet-table td:hover {
+  background-color: #f8f8f8;
+}
+
+.worksheet-table td.selected {
+  background-color: #e3f2fd;
+}
+
+.cell-content {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 4px;
-  min-height: 24px;
-  width: 100%;
-  overflow-x: auto;
-}
-
-.employee-name-tag {
-  display: inline-flex;
+  justify-content: center;
   align-items: center;
-  background-color: #e8f0fe;
-  border: 1px solid #c0d8f7;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin: 2px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  position: relative; /* Add this */
-  z-index: 1; /* Add this to ensure it's above the overlay */
-  color: #000; /* Ensure text is black */
+  min-height: 24px;
+  padding: 2px;
 }
 
-/* Dropdown styling */
+.employee-name {
+  background-color: #e3f2fd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #1976d2;
+  white-space: nowrap;
+}
+
 .employee-dropdown {
   position: absolute;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 99999;
   max-height: 200px;
   overflow-y: auto;
-  width: 200px;
-  z-index: 1000;
+  min-width: 150px;
+  direction: rtl;
+  margin-top: 4px;
+  transform-origin: right top;
+  transform: scale(var(--inverse-zoom, 1));
 }
 
 .employee-option {
-  padding: 8px;
+  padding: 8px 12px;
   cursor: pointer;
+  transition: background-color 0.2s;
   text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.employee-option.selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
 }
 
 .employee-option:hover {
   background-color: #f5f5f5;
 }
 
-.worksheet-table tbody tr:hover {
-  background-color: #f8f9fa;
+.employee-option.selected:hover {
+  background-color: #bbdefb;
 }
 
-.cell-input:hover {
-  border-color: #39587F;
-}
-
-.cell-input:focus {
-  outline: none;
-  border-color: #39587F;
-  box-shadow: 0 0 0 2px rgba(57, 88, 127, 0.1);
-}
-
-.weekday-name {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-/* RTL specific styles */
-[dir="rtl"] .worksheet-table th,
-[dir="rtl"] .worksheet-table td {
-  text-align: center;
+/* Remove conflicting styles */
+.worksheet-table-container[dir="rtl"] .employee-dropdown,
+.worksheet-table-container[dir="rtl"] .employee-option {
+  right: auto;
 }
 
 /* Mobile styles */
 @media (max-width: 768px) {
+  .worksheet-container {
+    padding: 10px;
+  }
+  
   .worksheet-table-container {
-    margin-top: 1rem;
-    border-radius: 0;
+    width: 100%;
+    margin: 0;
   }
 
   .worksheet-table th,
   .worksheet-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 6px;
   }
 
-  .cell-input {
-    padding: 0.4rem;
-    font-size: 0.85rem;
+  .employee-name {
+    font-size: 0.8em;
+    padding: 1px 4px;
   }
+}
 
-  .hebrew-letter {
-    font-size: 1rem;
-  }
+/* Remove the previous positioning styles that might conflict */
+.worksheet-table td {
+  position: relative;
+  z-index: 1;
+}
 
-  .weekday-name {
-    font-size: 0.75rem;
-  }
+/* Remove the has-dropdown class styles as we're using fixed positioning */
+.worksheet-table td.has-dropdown {
+  z-index: 1;
+}
+
+/* Ensure the cell input and employee tags don't interfere with dropdown */
+.cell-input,
+.employee-name-tag {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure the worksheet cell has proper positioning context */
+.worksheet-cell {
+  position: relative;
+  z-index: 1;
+}
+
+/* When dropdown is open, increase z-index of parent cell */
+.worksheet-cell.has-dropdown {
+  z-index: 99999;
+}
+
+/* Remove the overflow: visible from the container */
+.worksheet-table-container {
+  overflow: visible;
+}
+
+.table-content {
+  overflow: auto;
+}
+
+/* Add styles for Saturday rows */
+.worksheet-table tr.saturday {
+  background-color: #f0f7ff;
+}
+
+.worksheet-table tr.saturday td {
+  background-color: #f0f7ff;
+}
+
+/* Update hover state for Saturday rows */
+.worksheet-table tr.saturday:hover td {
+  background-color: #e3f2fd;
+}
+
+/* Ensure sticky columns maintain their background */
+.worksheet-table tr.saturday td:first-child,
+.worksheet-table tr.saturday td:nth-child(2) {
+  background-color: #e8f1fc;
 } 
