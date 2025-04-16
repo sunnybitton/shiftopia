@@ -63,12 +63,11 @@ app.use((req, res, next) => {
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false,
-    sslmode: 'require'
+    rejectUnauthorized: false
   },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  max: 2, // Reduced for starter tier
+  idleTimeoutMillis: 300000, // 5 minutes
+  connectionTimeoutMillis: 30000, // 30 seconds
 });
 
 // Add connection error handling
