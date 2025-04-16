@@ -62,59 +62,83 @@ app.use((req, res, next) => {
 // Database configuration
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? {
+  ssl: {
     rejectUnauthorized: false,
     sslmode: 'require'
-  } : false,
-  max: 20,
-  min: 0,
-  idleTimeoutMillis: 1000 * 60 * 10, // 10 minutes
-  connectionTimeoutMillis: 30000, // 30 seconds
+  },
+  max: 5, // Increased from 2
+  min: 1, // Added minimum connections
+  idleTimeoutMillis: 1000 * 60 * 10, // Increased to 10 minutes
+  connectionTimeoutMillis: 30000, // Increased to 30 seconds
   keepAlive: true,
-  keepAliveInitialDelayMillis: 10000
+  keepAliveInitialDelayMillis: 1000 * 30, // 30 seconds
+  application_name: 'shiftopia', // Added application name for better monitoring
+  statement_timeout: 30000, // 30 seconds timeout for queries
+  query_timeout: 30000 // 30 seconds timeout for queries
 });
 
-// Add better error handling
+// Add better error handling with reconnection logic
 pool.on('error', (err, client) => {
   console.error('Unexpected error on idle client', err);
   if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
-    console.log('Connection lost. Attempting to reconnect...');
+    console.log('Connection lost. Will attempt to reconnect on next query.');
+  }
+  // Don't exit on transient errors
+  if (err.code !== 'ECONNRESET' && err.code !== 'PROTOCOL_CONNECTION_LOST') {
+    console.error('Fatal database error:', err);
+    process.exit(-1);
   }
 });
 
-// Add connection validation
-pool.on('connect', (client) => {
-  client.on('error', (err) => {
-    console.error('Database client error:', err);
-  });
-});
+// Add connection validation with retry logic
+const validateAndCleanPool = async (retryCount = 0) => {
+  const MAX_RETRIES = 5; // Increased from 3
+  const RETRY_DELAY = 5000; // 5 seconds
 
-// Add connection monitoring
-const validateAndCleanPool = async () => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT 1');
-    client.release();
-    if (result.rows[0]['?column?'] === 1) {
-      console.log('Database connection validated');
+    try {
+      const result = await client.query('SELECT 1');
+      if (result.rows[0]['?column?'] === 1) {
+        console.log('Database connection validated');
+      }
+    } finally {
+      client.release();
     }
   } catch (err) {
     console.error('Error validating pool:', err);
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Retrying validation in ${RETRY_DELAY/1000} seconds... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return validateAndCleanPool(retryCount + 1);
+    }
+    throw err;
   }
 };
 
-// Validate connections every 5 minutes
-setInterval(validateAndCleanPool, 1000 * 60 * 5);
+// Validate connections every 10 minutes (increased from 5)
+const poolValidationInterval = setInterval(validateAndCleanPool, 1000 * 60 * 10);
 
-// Initialize database connection
-validateAndCleanPool().catch(err => {
-  console.error('Failed to initialize database connection:', err);
-  process.exit(1);
+// Cleanup on process exit
+process.on('SIGTERM', () => {
+  clearInterval(poolValidationInterval);
+  pool.end();
 });
 
-// Initialize database schema
-async function initializeDatabase() {
+process.on('SIGINT', () => {
+  clearInterval(poolValidationInterval);
+  pool.end();
+});
+
+// Initialize database connection with retries
+const initializeDatabase = async (retryCount = 0) => {
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY = 5000; // 5 seconds
+
   try {
+    await validateAndCleanPool();
+    console.log('Database connection initialized successfully');
+    
     // Check if password column exists
     const checkColumn = await pool.query(`
       SELECT column_name 
@@ -161,8 +185,14 @@ async function initializeDatabase() {
     console.log('Current table structure:', tableInfo.rows);
   } catch (error) {
     console.error('Error initializing database:', error);
+    if (retryCount < MAX_RETRIES) {
+      console.log(`Retrying initialization in ${RETRY_DELAY/1000} seconds... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return initializeDatabase(retryCount + 1);
+    }
+    throw error;
   }
-}
+};
 
 // Test database connection
 pool.query('SELECT NOW()', async (err, res) => {
@@ -1155,6 +1185,32 @@ app.delete('/api/stations/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete station' });
   } finally {
     client.release();
+  }
+});
+
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const client = await pool.connect();
+    try {
+      await client.query('SELECT 1');
+      res.json({ 
+        status: 'healthy',
+        database: 'connected',
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Health check failed:', err);
+    res.status(503).json({ 
+      status: 'unhealthy',
+      database: 'disconnected',
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

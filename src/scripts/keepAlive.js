@@ -12,9 +12,17 @@ async function pingService() {
     // Ping the API endpoint
     const response = await fetch(`${process.env.VITE_API_URL}/health`);
     if (response.ok) {
-      console.log('Service ping successful at:', new Date().toISOString());
+      const data = await response.json();
+      console.log('Service ping successful:', data);
     } else {
       console.error('Service ping failed with status:', response.status);
+      // Try to get error details
+      try {
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+      } catch (e) {
+        // Ignore parse error
+      }
     }
   } catch (err) {
     console.error('Ping failed:', err.message);
