@@ -62,11 +62,11 @@ app.use((req, res, next) => {
 // Database configuration
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? {
+  ssl: {
     rejectUnauthorized: false,
     sslmode: 'require'
-  } : false,
-  max: process.env.NODE_ENV === 'production' ? 2 : 10, // Limit connections on production
+  },
+  max: 2, // Limit connections for free tier
   min: 0,
   idleTimeoutMillis: 1000 * 60 * 5, // 5 minutes
   connectionTimeoutMillis: 30000, // 30 seconds
@@ -74,20 +74,19 @@ const pool = new pg.Pool({
   keepAliveInitialDelayMillis: 1000 * 30, // 30 seconds
   application_name: 'shiftopia',
   statement_timeout: 30000, // 30 seconds
-  query_timeout: 30000, // 30 seconds
-  connectionRetryAttempts: 5,
-  connectionRetryDelay: 5000 // 5 seconds
+  query_timeout: 30000 // 30 seconds
 });
 
 // Add better error handling with reconnection logic
 pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', err);
+  console.error('Unexpected error on idle client:', {
+    message: err.message,
+    code: err.code,
+    stack: err.stack
+  });
+
   if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
     console.log('Connection lost. Will attempt to reconnect on next query.');
-  }
-  // Don't exit on transient errors
-  if (err.code !== 'ECONNRESET' && err.code !== 'PROTOCOL_CONNECTION_LOST') {
-    console.error('Fatal database error:', err);
   }
 });
 
@@ -107,7 +106,12 @@ const validateAndCleanPool = async (retryCount = 0) => {
       client.release();
     }
   } catch (err) {
-    console.error('Error validating pool:', err);
+    console.error('Error validating pool:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    });
+    
     if (retryCount < MAX_RETRIES) {
       console.log(`Retrying validation in ${RETRY_DELAY/1000} seconds... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
@@ -121,10 +125,20 @@ const validateAndCleanPool = async (retryCount = 0) => {
 // Test database connection
 pool.query('SELECT NOW()', async (err, res) => {
   if (err) {
-    console.error('Database connection error:', err);
+    console.error('Database connection error:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    });
     console.log('Database URL:', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@')); // Hide password
     console.log('Environment:', process.env.NODE_ENV);
-    console.log('SSL Enabled:', !!pool.options.ssl);
+    console.log('SSL Enabled:', true);
+    console.log('Connection Pool Config:', {
+      max: pool.options.max,
+      idleTimeoutMillis: pool.options.idleTimeoutMillis,
+      connectionTimeoutMillis: pool.options.connectionTimeoutMillis,
+      ssl: !!pool.options.ssl
+    });
   } else {
     console.log('Database connected successfully at:', res.rows[0].now);
     await validateAndCleanPool();
