@@ -1,85 +1,107 @@
-import pkg from 'pg';
-const { Pool } = pkg;
-import * as dotenv from 'dotenv';
+import pg from 'pg';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config();
+dotenv.config({ path: join(__dirname, '../../.env') });
+
+const { Pool } = pg;
+
+const MAX_RETRIES = 5;
+const RETRY_DELAY = 5000; // 5 seconds
+
+const sslConfig = {
+  rejectUnauthorized: true,
+  ca: process.env.SSL_CA,
+  key: process.env.SSL_KEY,
+  cert: process.env.SSL_CERT,
+};
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false // Required for Render's free tier
+  },
+  connectionTimeoutMillis: 30000,
+  idleTimeoutMillis: 30000,
+  max: 1
 });
 
-async function testConnection() {
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function testConnection(retryCount = 0) {
+  let client;
   try {
-    const result = await pool.query('SELECT NOW()');
-    console.log('Database connection successful!');
-    console.log('Current time from database:', result.rows[0].now);
+    console.log('Database URL:', process.env.DATABASE_URL?.replace(/:[^:@]*@/, ':****@')); // Hide password
+    console.log('Attempting to connect with the following config:');
+    console.log('Connection timeout:', pool.options.connectionTimeoutMillis);
+    console.log('SSL enabled:', !!pool.options.ssl);
     
-    // Drop the existing table
-    await pool.query('DROP TABLE IF EXISTS employees');
-    console.log('Dropped existing employees table');
+    console.log(`Connection attempt ${retryCount + 1}/${MAX_RETRIES + 1}...`);
+    client = await pool.connect();
     
-    // Create the employees table with new schema
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS employees (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        role VARCHAR(50),
-        worker_id VARCHAR(50) UNIQUE,
-        phone VARCHAR(50),
-        username VARCHAR(255) UNIQUE,
-        password TEXT,
-        active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-    
-    await pool.query(createTableQuery);
-    console.log('Employees table created with new schema successfully!');
-    
-    // Test inserting a sample employee
-    const testEmployee = {
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'Staff',
-      worker_id: 'W123',
-      phone: '555-0123',
-      username: 'testuser'
-    };
-    
+    // Test basic connectivity with a simple query first
     try {
-      const insertResult = await pool.query(
-        'INSERT INTO employees(name, email, role, worker_id, phone, username) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT (email) DO NOTHING RETURNING *',
-        [testEmployee.name, testEmployee.email, testEmployee.role, testEmployee.worker_id, testEmployee.phone, testEmployee.username]
-      );
-      
-      if (insertResult.rows.length > 0) {
-        console.log('Test employee inserted successfully:', insertResult.rows[0]);
-      } else {
-        console.log('Test employee already exists (which is fine)');
-      }
-      
-      // Query all employees
-      const allEmployees = await pool.query('SELECT * FROM employees');
-      console.log('\nCurrent employees in database:', allEmployees.rows);
-      
+      const result = await client.query('SELECT 1');
+      console.log('Basic connection test successful');
     } catch (err) {
-      console.error('Error during employee operations:', err);
+      console.error('Basic connection test failed:', err);
+      throw err;
     }
     
-  } catch (err) {
-    console.error('Database test failed:', err);
+    // If basic test passes, try more complex queries
+    const timeResult = await client.query('SELECT NOW()');
+    console.log('Current database time:', timeResult.rows[0].now);
+    
+    // Get PostgreSQL version
+    const versionResult = await client.query('SELECT version()');
+    console.log('Database version:', versionResult.rows[0].version);
+    
+    // List available schemas
+    const schemasResult = await client.query(`
+      SELECT schema_name 
+      FROM information_schema.schemata 
+      WHERE schema_name NOT IN ('information_schema', 'pg_catalog')
+    `);
+    console.log('Available schemas:', schemasResult.rows.map(row => row.schema_name));
+    
+    console.log('Database connection test successful!');
+    return true;
+  } catch (error) {
+    console.error(`Connection error (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+    });
+    
+    if (retryCount < MAX_RETRIES) {
+      const delay = RETRY_DELAY * (retryCount + 1); // Exponential backoff
+      console.log(`Retrying in ${delay/1000} seconds...`);
+      await sleep(delay);
+      return testConnection(retryCount + 1);
+    }
+    
+    throw error;
   } finally {
-    await pool.end();
+    client?.release();
   }
 }
 
-testConnection(); 
+// Run the test
+testConnection()
+  .then(() => {
+    console.log('Test completed successfully');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Final error:', error);
+    process.exit(1);
+  })
+  .finally(() => {
+    pool.end();
+  }); 

@@ -62,28 +62,54 @@ app.use((req, res, next) => {
 // Database configuration
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false,
     sslmode: 'require'
-  },
+  } : false,
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  min: 0,
+  idleTimeoutMillis: 1000 * 60 * 10, // 10 minutes
+  connectionTimeoutMillis: 30000, // 30 seconds
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000
 });
 
-// Add connection error handling
-pool.on('error', (err) => {
+// Add better error handling
+pool.on('error', (err, client) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
+    console.log('Connection lost. Attempting to reconnect...');
+  }
+});
+
+// Add connection validation
+pool.on('connect', (client) => {
+  client.on('error', (err) => {
+    console.error('Database client error:', err);
+  });
 });
 
 // Add connection monitoring
-pool.on('connect', () => {
-  console.log('New client connected to database');
-});
+const validateAndCleanPool = async () => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT 1');
+    client.release();
+    if (result.rows[0]['?column?'] === 1) {
+      console.log('Database connection validated');
+    }
+  } catch (err) {
+    console.error('Error validating pool:', err);
+  }
+};
 
-pool.on('remove', () => {
-  console.log('Client removed from pool');
+// Validate connections every 5 minutes
+setInterval(validateAndCleanPool, 1000 * 60 * 5);
+
+// Initialize database connection
+validateAndCleanPool().catch(err => {
+  console.error('Failed to initialize database connection:', err);
+  process.exit(1);
 });
 
 // Initialize database schema
