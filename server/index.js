@@ -62,19 +62,21 @@ app.use((req, res, next) => {
 // Database configuration
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false,
     sslmode: 'require'
-  },
-  max: 5, // Increased from 2
-  min: 1, // Added minimum connections
-  idleTimeoutMillis: 1000 * 60 * 10, // Increased to 10 minutes
-  connectionTimeoutMillis: 30000, // Increased to 30 seconds
+  } : false,
+  max: process.env.NODE_ENV === 'production' ? 2 : 10, // Limit connections on production
+  min: 0,
+  idleTimeoutMillis: 1000 * 60 * 5, // 5 minutes
+  connectionTimeoutMillis: 30000, // 30 seconds
   keepAlive: true,
   keepAliveInitialDelayMillis: 1000 * 30, // 30 seconds
-  application_name: 'shiftopia', // Added application name for better monitoring
-  statement_timeout: 30000, // 30 seconds timeout for queries
-  query_timeout: 30000 // 30 seconds timeout for queries
+  application_name: 'shiftopia',
+  statement_timeout: 30000, // 30 seconds
+  query_timeout: 30000, // 30 seconds
+  connectionRetryAttempts: 5,
+  connectionRetryDelay: 5000 // 5 seconds
 });
 
 // Add better error handling with reconnection logic
@@ -86,13 +88,12 @@ pool.on('error', (err, client) => {
   // Don't exit on transient errors
   if (err.code !== 'ECONNRESET' && err.code !== 'PROTOCOL_CONNECTION_LOST') {
     console.error('Fatal database error:', err);
-    process.exit(-1);
   }
 });
 
 // Add connection validation with retry logic
 const validateAndCleanPool = async (retryCount = 0) => {
-  const MAX_RETRIES = 5; // Increased from 3
+  const MAX_RETRIES = 5;
   const RETRY_DELAY = 5000; // 5 seconds
 
   try {
@@ -112,12 +113,26 @@ const validateAndCleanPool = async (retryCount = 0) => {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return validateAndCleanPool(retryCount + 1);
     }
-    throw err;
+    // Don't throw error, just log it
+    console.error('Max retries reached for database validation');
   }
 };
 
-// Validate connections every 10 minutes (increased from 5)
-const poolValidationInterval = setInterval(validateAndCleanPool, 1000 * 60 * 10);
+// Test database connection
+pool.query('SELECT NOW()', async (err, res) => {
+  if (err) {
+    console.error('Database connection error:', err);
+    console.log('Database URL:', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@')); // Hide password
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('SSL Enabled:', !!pool.options.ssl);
+  } else {
+    console.log('Database connected successfully at:', res.rows[0].now);
+    await validateAndCleanPool();
+  }
+});
+
+// Validate connections every 5 minutes
+const poolValidationInterval = setInterval(validateAndCleanPool, 1000 * 60 * 5);
 
 // Cleanup on process exit
 process.on('SIGTERM', () => {
@@ -1194,11 +1209,20 @@ app.get('/health', async (req, res) => {
     // Test database connection
     const client = await pool.connect();
     try {
-      await client.query('SELECT 1');
+      const result = await client.query('SELECT NOW() as time');
       res.json({ 
         status: 'healthy',
-        database: 'connected',
-        timestamp: new Date().toISOString()
+        database: {
+          status: 'connected',
+          timestamp: result.rows[0].time,
+          ssl: !!pool.options.ssl,
+          environment: process.env.NODE_ENV
+        },
+        server: {
+          timestamp: new Date().toISOString(),
+          port: process.env.PORT,
+          nodeEnv: process.env.NODE_ENV
+        }
       });
     } finally {
       client.release();
@@ -1207,9 +1231,18 @@ app.get('/health', async (req, res) => {
     console.error('Health check failed:', err);
     res.status(503).json({ 
       status: 'unhealthy',
-      database: 'disconnected',
-      error: err.message,
-      timestamp: new Date().toISOString()
+      database: {
+        status: 'disconnected',
+        error: err.message,
+        code: err.code,
+        ssl: !!pool.options.ssl,
+        environment: process.env.NODE_ENV
+      },
+      server: {
+        timestamp: new Date().toISOString(),
+        port: process.env.PORT,
+        nodeEnv: process.env.NODE_ENV
+      }
     });
   }
 });
