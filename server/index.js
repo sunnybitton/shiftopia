@@ -66,7 +66,7 @@ const pool = new pg.Pool({
     rejectUnauthorized: false,
     sslmode: 'require'
   },
-  max: 2, // Limit connections for free tier
+  max: 50, 
   min: 0,
   idleTimeoutMillis: 1000 * 60 * 5, // 5 minutes
   connectionTimeoutMillis: 30000, // 30 seconds
