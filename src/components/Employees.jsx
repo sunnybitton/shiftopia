@@ -34,14 +34,13 @@ const Employees = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [columnPreferences, setColumnPreferences] = useState({
-    visibleColumns: ["name", "email", "role", "username", "worker_id", "phone"],
-    columnOrder: ["name", "email", "role", "username", "worker_id", "phone"]
+    visibleColumns: ["name", "email", "role", "username", "phone"],
+    columnOrder: ["name", "email", "role", "username", "phone"]
   });
   const [newEmployee, setNewEmployee] = useState({
     name: '',
     email: '',
     role: '',
-    worker_id: '',
     phone: '',
     username: '',
     password: ''
@@ -53,7 +52,6 @@ const Employees = () => {
     { id: 'email', label: 'Email', required: false },
     { id: 'role', label: 'Role', required: false },
     { id: 'username', label: 'Username', required: false },
-    { id: 'worker_id', label: 'Worker ID', required: false },
     { id: 'phone', label: 'Phone', required: false }
   ];
 
@@ -64,12 +62,17 @@ const Employees = () => {
     const storedPreferences = localStorage.getItem('columnPreferences');
     if (storedPreferences) {
       const preferences = JSON.parse(storedPreferences);
-      // Filter out id and active fields
-      const filteredPreferences = {
-        visibleColumns: preferences.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
-        columnOrder: preferences.columnOrder.filter(col => col !== 'id' && col !== 'active')
-      };
-      setColumnPreferences(filteredPreferences);
+      // Filter out id fields and clean IDs
+      const cleanedVisibleColumns = preferences.visibleColumns
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+      const cleanedColumnOrder = preferences.columnOrder
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+      setColumnPreferences({
+        visibleColumns: cleanedVisibleColumns,
+        columnOrder: cleanedColumnOrder
+      });
     } else {
       fetchColumnPreferences();
     }
@@ -78,12 +81,17 @@ const Employees = () => {
     const handleStorageChange = (e) => {
       if (e.key === 'columnPreferences' && e.newValue) {
         const preferences = JSON.parse(e.newValue);
-        // Filter out id and active fields
-        const filteredPreferences = {
-          visibleColumns: preferences.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
-          columnOrder: preferences.columnOrder.filter(col => col !== 'id' && col !== 'active')
-        };
-        setColumnPreferences(filteredPreferences);
+        // Filter out id fields and clean IDs
+        const cleanedVisibleColumns = preferences.visibleColumns
+          .filter(col => col !== 'id')
+          .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+        const cleanedColumnOrder = preferences.columnOrder
+          .filter(col => col !== 'id')
+          .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+        setColumnPreferences({
+          visibleColumns: cleanedVisibleColumns,
+          columnOrder: cleanedColumnOrder
+        });
       }
     };
 
@@ -98,13 +106,18 @@ const Employees = () => {
       const response = await fetch(`${API_URL}/settings/column-preferences`);
       if (!response.ok) throw new Error('Failed to fetch column preferences');
       const data = await response.json();
-      // Filter out id and active fields
-      const filteredPreferences = {
-        visibleColumns: data.visibleColumns.filter(col => col !== 'id' && col !== 'active'),
-        columnOrder: data.columnOrder.filter(col => col !== 'id' && col !== 'active')
-      };
-      setColumnPreferences(filteredPreferences);
-      localStorage.setItem('columnPreferences', JSON.stringify(filteredPreferences));
+      // Filter out id fields and clean IDs
+      const cleanedVisibleColumns = data.visibleColumns
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+      const cleanedColumnOrder = data.columnOrder
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+      setColumnPreferences({
+        visibleColumns: cleanedVisibleColumns,
+        columnOrder: cleanedColumnOrder
+      });
+      localStorage.setItem('columnPreferences', JSON.stringify(columnPreferences));
     } catch (err) {
       console.error('Error fetching column preferences:', err);
     }
@@ -134,7 +147,6 @@ const Employees = () => {
         name: '',
         email: '',
         role: '',
-        worker_id: '',
         phone: '',
         username: '',
         password: ''
@@ -181,7 +193,6 @@ const Employees = () => {
       name: 'Name',
       email: 'Email',
       role: 'Role',
-      worker_id: 'Worker ID',
       phone: 'Phone',
       username: 'Username'
     };
@@ -189,10 +200,15 @@ const Employees = () => {
   };
 
   const renderEmployeeForm = (employee, onSubmit, onCancel) => {
+    // Define allowed fields explicitly
+    const allowedFields = ['name', 'email', 'role', 'username', 'phone'];
+    
     // When editing (onCancel exists), show all fields regardless of visibility settings
     const fieldsToShow = onCancel 
-      ? allColumns.map(col => col.id).filter(id => id !== 'id' && id !== 'active')
-      : columnPreferences.columnOrder.filter(columnId => columnId !== 'id' && columnId !== 'active');
+      ? allowedFields
+      : columnPreferences.columnOrder.filter(columnId => 
+          allowedFields.includes(columnId) && columnId !== 'id'
+        );
 
     return (
       <form onSubmit={onSubmit} className="employee-form">

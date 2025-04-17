@@ -1,8 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { google } from 'googleapis';
-import pg from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -60,21 +66,21 @@ app.use((req, res, next) => {
 });
 
 // Database configuration
-const pool = new pg.Pool({
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
     sslmode: 'require'
   },
-  max: 50, 
-  min: 0,
+  max: 20, // Reduced from 50 to prevent connection overload
+  min: 4,  // Increased from 0 to maintain some connections
   idleTimeoutMillis: 1000 * 60 * 5, // 5 minutes
-  connectionTimeoutMillis: 30000, // 30 seconds
+  connectionTimeoutMillis: 10000, // Reduced to 10 seconds
   keepAlive: true,
-  keepAliveInitialDelayMillis: 1000 * 30, // 30 seconds
+  keepAliveInitialDelayMillis: 1000 * 10, // Reduced to 10 seconds
   application_name: 'shiftopia',
-  statement_timeout: 30000, // 30 seconds
-  query_timeout: 30000 // 30 seconds
+  statement_timeout: 10000, // Reduced to 10 seconds
+  query_timeout: 10000 // Reduced to 10 seconds
 });
 
 // Add better error handling with reconnection logic
@@ -82,7 +88,8 @@ pool.on('error', (err, client) => {
   console.error('Unexpected error on idle client:', {
     message: err.message,
     code: err.code,
-    stack: err.stack
+    stack: err.stack,
+    detail: err.detail
   });
 
   if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
@@ -109,7 +116,8 @@ const validateAndCleanPool = async (retryCount = 0) => {
     console.error('Error validating pool:', {
       message: err.message,
       code: err.code,
-      stack: err.stack
+      stack: err.stack,
+      detail: err.detail
     });
     
     if (retryCount < MAX_RETRIES) {
@@ -117,7 +125,6 @@ const validateAndCleanPool = async (retryCount = 0) => {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return validateAndCleanPool(retryCount + 1);
     }
-    // Don't throw error, just log it
     console.error('Max retries reached for database validation');
   }
 };
@@ -128,7 +135,8 @@ pool.query('SELECT NOW()', async (err, res) => {
     console.error('Database connection error:', {
       message: err.message,
       code: err.code,
-      stack: err.stack
+      stack: err.stack,
+      detail: err.detail
     });
     console.log('Database URL:', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@')); // Hide password
     console.log('Environment:', process.env.NODE_ENV);
@@ -168,41 +176,74 @@ const initializeDatabase = async (retryCount = 0) => {
     await validateAndCleanPool();
     console.log('Database connection initialized successfully');
     
-    // Check if password column exists
-    const checkColumn = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'employees' 
-      AND column_name = 'password'
+    // Check if employees table exists
+    const tableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'employees'
+      );
     `);
+    console.log('Checking if employees table exists:', tableCheck.rows[0]);
 
-    if (checkColumn.rows.length === 0) {
-      console.log('Adding password column to employees table...');
+    if (!tableCheck.rows[0].exists) {
+      console.log('Creating employees table...');
       await pool.query(`
-        ALTER TABLE employees 
-        ADD COLUMN IF NOT EXISTS password TEXT
-      `);
-      console.log('Password column added successfully');
-    }
+        CREATE TABLE IF NOT EXISTS employees (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL UNIQUE,
+          role VARCHAR(50) NOT NULL,
+          phone VARCHAR(50),
+          username VARCHAR(255) NOT NULL UNIQUE,
+          password TEXT,
+          column_preferences JSONB DEFAULT '{
+            "visibleColumns": ["id", "role", "phone", "username", "name", "email"],
+            "columnOrder": ["name", "email", "role", "username", "phone", "id"]
+          }'::jsonb,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
 
-    // Check if column_preferences column exists
-    const checkPreferencesColumn = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'employees' 
-      AND column_name = 'column_preferences'
-    `);
-
-    if (checkPreferencesColumn.rows.length === 0) {
-      console.log('Adding column_preferences column to employees table...');
-      await pool.query(`
-        ALTER TABLE employees 
-        ADD COLUMN IF NOT EXISTS column_preferences JSONB DEFAULT '{
-          "visibleColumns": ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
-          "columnOrder": ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
-        }'::jsonb
+        CREATE INDEX IF NOT EXISTS employees_role_idx ON employees(role);
+        CREATE INDEX IF NOT EXISTS employees_email_idx ON employees(email);
+        CREATE INDEX IF NOT EXISTS employees_username_idx ON employees(username);
       `);
-      console.log('Column preferences column added successfully');
+      console.log('Employees table created successfully');
+    } else {
+      // Check if updated_at column exists
+      const columnCheck = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_schema = 'public' 
+          AND table_name = 'employees' 
+          AND column_name = 'updated_at'
+        );
+      `);
+      
+      if (!columnCheck.rows[0].exists) {
+        console.log('Adding updated_at column to employees table...');
+        await pool.query(`
+          ALTER TABLE employees 
+          ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+          
+          -- Add trigger to automatically update updated_at
+          CREATE OR REPLACE FUNCTION update_employees_updated_at()
+          RETURNS TRIGGER AS $$
+          BEGIN
+              NEW.updated_at = CURRENT_TIMESTAMP;
+              RETURN NEW;
+          END;
+          $$ language 'plpgsql';
+
+          DROP TRIGGER IF EXISTS update_employees_updated_at ON employees;
+          CREATE TRIGGER update_employees_updated_at
+              BEFORE UPDATE ON employees
+              FOR EACH ROW
+              EXECUTE FUNCTION update_employees_updated_at();
+        `);
+        console.log('Added updated_at column successfully');
+      }
     }
 
     // Log table structure
@@ -213,7 +254,12 @@ const initializeDatabase = async (retryCount = 0) => {
     `);
     console.log('Current table structure:', tableInfo.rows);
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('Error initializing database:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      detail: error.detail
+    });
     if (retryCount < MAX_RETRIES) {
       console.log(`Retrying initialization in ${RETRY_DELAY/1000} seconds... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
@@ -223,10 +269,15 @@ const initializeDatabase = async (retryCount = 0) => {
   }
 };
 
-// Test database connection
+// Test database connection and initialize
 pool.query('SELECT NOW()', async (err, res) => {
   if (err) {
-    console.error('Database connection error:', err);
+    console.error('Database connection error:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      detail: err.detail
+    });
   } else {
     console.log('Database connected successfully');
     await initializeDatabase();
@@ -282,22 +333,64 @@ console.log('Auth credentials loaded:', {
 
 // Employee endpoints
 app.get('/api/employees', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const result = await pool.query('SELECT * FROM employees WHERE active = true ORDER BY name');
+    console.log('GET /api/employees - Fetching all employees');
+    
+    // Test database connection first
+    console.log('Testing database connection...');
+    const testConnection = await client.query('SELECT NOW()');
+    console.log('Database connection test successful:', testConnection.rows[0]);
+    
+    // Check if employees table exists
+    console.log('Checking if employees table exists...');
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'employees'
+      );
+    `);
+    console.log('Employees table exists:', tableCheck.rows[0]);
+
+    if (!tableCheck.rows[0].exists) {
+      throw new Error('Employees table does not exist');
+    }
+
+    console.log('Fetching employees...');
+    const result = await client.query(`
+      SELECT id, name, email, role, phone, username 
+      FROM employees 
+      ORDER BY name
+    `);
+    console.log(`Found ${result.rows.length} employees`);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    res.status(500).json({ error: 'Failed to fetch employees' });
+    console.error('Error fetching employees:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      detail: error.detail,
+      hint: error.hint
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch employees',
+      details: error.message,
+      code: error.code
+    });
+  } finally {
+    client.release();
   }
 });
 
 app.get('/api/employees/email/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM employees WHERE email = $1 AND active = true',
-      [email]
-    );
+    const result = await pool.query(`
+      SELECT id, name, email, role, phone, username 
+      FROM employees 
+      WHERE email = $1
+    `, [email]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Employee not found' });
@@ -311,108 +404,304 @@ app.get('/api/employees/email/:email', async (req, res) => {
 });
 
 app.post('/api/employees', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { name, email, role, worker_id, phone, username, password } = req.body;
+    const { name, email, role, phone, username, password } = req.body;
     
     console.log('Creating employee with data:', {
       name,
       email,
       role,
-      worker_id,
       phone,
       username,
       hasPassword: !!password
     });
 
     // Validate required fields
-    if (!name || !email || !role || !worker_id || !phone || !username || !password) {
+    const requiredFields = { name, email, role, phone, username, password };
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
       console.error('Missing required fields:', {
-        hasName: !!name,
-        hasEmail: !!email,
-        hasRole: !!role,
-        hasWorkerId: !!worker_id,
-        hasPhone: !!phone,
-        hasUsername: !!username,
-        hasPassword: !!password
+        missingFields,
+        receivedFields: Object.keys(req.body),
+        receivedValues: requiredFields
       });
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    // Check if there's an existing active employee with this email
-    const existingActive = await pool.query(
-      'SELECT id FROM employees WHERE email = $1 AND active = true',
-      [email]
-    );
-
-    if (existingActive.rows.length > 0) {
       return res.status(400).json({ 
-        error: 'This email is already taken',
-        field: 'email'
+        error: 'All fields are required',
+        missingFields
       });
     }
 
-    // Check if there's an inactive employee with this email
-    const existingInactive = await pool.query(
-      'SELECT id FROM employees WHERE email = $1 AND active = false',
-      [email]
-    );
+    // Check if email or username exists in active employees
+    console.log('Checking for existing user...');
+    const existingUser = await client.query(`
+      SELECT email, username 
+      FROM employees 
+      WHERE email = $1 OR username = $2
+    `, [email, username]);
 
-    let result;
-    if (existingInactive.rows.length > 0) {
-      // Reactivate and update the existing employee
-      result = await pool.query(
-        `UPDATE employees 
-         SET name = $1, role = $2, worker_id = $3, phone = $4, username = $5, password = $6, active = true 
-         WHERE email = $7 
-         RETURNING *`,
-        [name, role, worker_id, phone, username, password, email]
-      );
-      console.log('Reactivated and updated inactive employee:', result.rows[0]);
-    } else {
-      // Create new employee
-      result = await pool.query(
-        'INSERT INTO employees (name, email, role, worker_id, phone, username, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [name, email, role, worker_id, phone, username, password]
-      );
-      console.log('Created new employee:', result.rows[0]);
+    if (existingUser.rows.length > 0) {
+      const existing = existingUser.rows[0];
+      if (existing.email === email) {
+        return res.status(400).json({ 
+          error: 'This email is already taken',
+          field: 'email'
+        });
+      }
+      if (existing.username === username) {
+        return res.status(400).json({ 
+          error: 'This username is already taken',
+          field: 'username'
+        });
+      }
     }
+
+    // Create new employee
+    console.log('Creating new employee...');
+    const result = await client.query(`
+      INSERT INTO employees (name, email, role, phone, username, password) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      RETURNING id, name, email, role, phone, username
+    `, [name, email, role, phone, username, password]);
     
+    console.log('Employee created successfully');
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Detailed error creating employee:', {
+    console.error('Error creating employee:', {
       message: error.message,
-      stack: error.stack,
       code: error.code,
+      stack: error.stack,
       detail: error.detail,
-      constraint: error.constraint,
-      table: error.table,
-      column: error.column
+      hint: error.hint
     });
+    
+    // Check for unique constraint violations
+    if (error.code === '23505') { // unique_violation
+      if (error.constraint?.includes('email')) {
+        return res.status(400).json({ 
+          error: 'This email is already taken',
+          field: 'email'
+        });
+      }
+      if (error.constraint?.includes('username')) {
+        return res.status(400).json({ 
+          error: 'This username is already taken',
+          field: 'username'
+        });
+      }
+    }
     
     res.status(500).json({ 
       error: 'Failed to create employee',
-      details: error.message
+      details: error.message,
+      code: error.code
     });
+  } finally {
+    client.release();
   }
 });
 
 app.put('/api/employees/:id', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { id } = req.params;
-    const { name, email, role, worker_id, phone, username } = req.body;
-    const result = await pool.query(
-      'UPDATE employees SET name = $1, email = $2, role = $3, worker_id = $4, phone = $5, username = $6 WHERE id = $7 AND active = true RETURNING *',
-      [name, email, role, worker_id, phone, username, id]
-    );
+    await client.query('BEGIN');  // Start transaction
     
-    if (result.rows.length === 0) {
+    const { id } = req.params;
+    const { name, email, role, phone, username } = req.body;
+
+    console.log('Updating employee with data:', {
+      id,
+      name,
+      email,
+      role,
+      phone,
+      username,
+      receivedBody: JSON.stringify(req.body)
+    });
+
+    // Validate ID is a number
+    const employeeId = parseInt(id);
+    if (isNaN(employeeId)) {
+      await client.query('ROLLBACK');
+      console.error('Invalid employee ID:', id);
+      return res.status(400).json({ error: 'Invalid employee ID' });
+    }
+
+    // Validate required fields
+    const requiredFields = { name, email, role, phone, username };
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
+      await client.query('ROLLBACK');
+      console.error('Missing required fields:', {
+        missingFields,
+        receivedFields: Object.keys(req.body),
+        receivedValues: requiredFields
+      });
+      return res.status(400).json({ 
+        error: 'All fields are required',
+        missingFields
+      });
+    }
+
+    // First check if employee exists
+    console.log('Checking if employee exists:', employeeId);
+    const checkEmployee = await client.query(
+      'SELECT id FROM employees WHERE id = $1',
+      [employeeId]
+    );
+
+    if (checkEmployee.rows.length === 0) {
+      await client.query('ROLLBACK');
+      console.error('Employee not found:', employeeId);
       return res.status(404).json({ error: 'Employee not found' });
     }
+
+    // Check if email or username is already taken by another employee
+    console.log('Checking for existing user with same email/username');
+    const existingUser = await client.query(`
+      SELECT id, email, username 
+      FROM employees 
+      WHERE (email = $1 OR username = $2) AND id != $3
+    `, [email, username, employeeId]);
+
+    if (existingUser.rows.length > 0) {
+      const existing = existingUser.rows[0];
+      console.log('Found existing user:', existing);
+      if (existing.email === email) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: 'This email is already taken by another employee',
+          field: 'email'
+        });
+      }
+      if (existing.username === username) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: 'This username is already taken by another employee',
+          field: 'username'
+        });
+      }
+    }
+
+    // Update the employee
+    console.log('Updating employee in database');
+    const updateQuery = `
+      UPDATE employees 
+      SET name = $1, 
+          email = $2, 
+          role = $3, 
+          phone = $4, 
+          username = $5,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $6 
+      RETURNING id, name, email, role, phone, username, updated_at
+    `;
     
-    res.json(result.rows[0]);
+    console.log('Executing query with params:', {
+      name,
+      email,
+      role,
+      phone,
+      username,
+      id: employeeId
+    });
+
+    try {
+      const result = await client.query(updateQuery, [
+        name,
+        email,
+        role,
+        phone,
+        username,
+        employeeId
+      ]);
+      
+      if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
+        console.error('Update failed - no rows returned');
+        return res.status(404).json({ error: 'Employee not found' });
+      }
+      
+      console.log('Update successful:', result.rows[0]);
+      await client.query('COMMIT');
+      res.json(result.rows[0]);
+    } catch (queryError) {
+      await client.query('ROLLBACK');
+      console.error('Error executing update query:', {
+        error: queryError,
+        message: queryError.message,
+        code: queryError.code,
+        detail: queryError.detail,
+        query: updateQuery,
+        params: [name, email, role, phone, username, employeeId]
+      });
+      throw queryError;
+    }
   } catch (error) {
-    console.error('Error updating employee:', error);
-    res.status(500).json({ error: 'Failed to update employee' });
+    await client.query('ROLLBACK');
+    console.error('Detailed error updating employee:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      detail: error.detail,
+      hint: error.hint,
+      constraint: error.constraint,
+      table: error.table,
+      column: error.column,
+      dataTypes: error.dataTypes,
+      routine: error.routine,
+      where: error.where,
+      position: error.position,
+      internalPosition: error.internalPosition,
+      internalQuery: error.internalQuery,
+      severity: error.severity,
+      context: error.context
+    });
+    
+    // Check for specific error types
+    if (error.code === '23505') { // unique_violation
+      if (error.constraint?.includes('email')) {
+        return res.status(400).json({ 
+          error: 'This email is already taken',
+          field: 'email'
+        });
+      }
+      if (error.constraint?.includes('username')) {
+        return res.status(400).json({ 
+          error: 'This username is already taken',
+          field: 'username'
+        });
+      }
+    }
+    
+    // Add more specific error handling
+    if (error.code === '23502') { // not_null_violation
+      return res.status(400).json({
+        error: `Required field cannot be null: ${error.column}`,
+        field: error.column
+      });
+    }
+    
+    if (error.code === '23503') { // foreign_key_violation
+      return res.status(400).json({
+        error: 'Referenced record does not exist',
+        details: error.detail
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to update employee',
+      details: error.message,
+      code: error.code
+    });
+  } finally {
+    client.release();
   }
 });
 
@@ -420,7 +709,7 @@ app.delete('/api/employees/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      'UPDATE employees SET active = false WHERE id = $1 RETURNING *',
+      'DELETE FROM employees WHERE id = $1 RETURNING id, name, email',
       [id]
     );
     
@@ -428,7 +717,10 @@ app.delete('/api/employees/:id', async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
     
-    res.json(result.rows[0]);
+    res.json({ 
+      message: 'Employee deleted successfully',
+      employee: result.rows[0]
+    });
   } catch (error) {
     console.error('Error deleting employee:', error);
     res.status(500).json({ error: 'Failed to delete employee' });
@@ -447,12 +739,8 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Test database connection
-    const testConnection = await pool.query('SELECT NOW()');
-    console.log('Database connection test:', testConnection.rows[0]);
-
     const result = await pool.query(
-      'SELECT id, name, email, role, worker_id, phone, username FROM employees WHERE email = $1 AND password = $2 AND active = true',
+      'SELECT id, name, email, role, phone, username FROM employees WHERE email = $1 AND password = $2',
       [email, password]
     );
     
@@ -507,7 +795,7 @@ app.post('/api/auth/update-password', async (req, res) => {
 
     // First verify the current password
     const verifyResult = await pool.query(
-      'SELECT id FROM employees WHERE email = $1 AND password = $2 AND active = true',
+      'SELECT id FROM employees WHERE email = $1 AND password = $2',
       [email, currentPassword]
     );
 
@@ -525,7 +813,7 @@ app.post('/api/auth/update-password', async (req, res) => {
 
     // Update the password
     const updateResult = await pool.query(
-      'UPDATE employees SET password = $1 WHERE email = $2 AND active = true RETURNING id',
+      'UPDATE employees SET password = $1 WHERE email = $2',
       [newPassword, email]
     );
 
@@ -638,7 +926,7 @@ if (process.env.NODE_ENV !== 'production') {
       const checkUser = await pool.query(`
         SELECT id, name, email, password 
         FROM employees 
-        WHERE email = $1 AND active = true
+        WHERE email = $1
       `, [email]);
 
       console.log('Current user state:', checkUser.rows[0]);
@@ -647,7 +935,7 @@ if (process.env.NODE_ENV !== 'production') {
       const result = await pool.query(`
         UPDATE employees 
         SET password = $1 
-        WHERE email = $2 AND active = true 
+        WHERE email = $2
         RETURNING id, name, email
       `, [password, email]);
       
@@ -670,7 +958,7 @@ if (process.env.NODE_ENV !== 'production') {
     try {
       const { email } = req.params;
       const result = await pool.query(`
-        SELECT id, name, email, password, active
+        SELECT id, name, email, password
         FROM employees 
         WHERE email = $1
       `, [email]);
@@ -697,7 +985,7 @@ if (process.env.NODE_ENV !== 'production') {
       const result = await pool.query(`
         UPDATE employees 
         SET password = $1 
-        WHERE email = $2 AND active = true 
+        WHERE email = $2
         RETURNING id, name, email
       `, [defaultPassword, email]);
       
@@ -784,7 +1072,6 @@ if (process.env.NODE_ENV !== 'production') {
       const result = await pool.query(`
         SELECT name, email, password 
         FROM employees 
-        WHERE active = true 
         ORDER BY name
       `);
       
@@ -808,8 +1095,8 @@ app.get('/api/settings/column-preferences', async (req, res) => {
     
     if (result.rows.length === 0) {
       return res.json({
-        visibleColumns: ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
-        columnOrder: ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
+        visibleColumns: ["id", "role", "phone", "username", "name", "email"],
+        columnOrder: ["name", "email", "role", "username", "phone", "id"]
       });
     }
     
@@ -851,8 +1138,8 @@ app.put('/api/settings/column-preferences', async (req, res) => {
 app.post('/api/settings/column-preferences/reset', async (req, res) => {
   try {
     const defaultPreferences = {
-      visibleColumns: ["active", "id", "role", "worker_id", "phone", "username", "name", "email"],
-      columnOrder: ["name", "email", "role", "username", "worker_id", "phone", "active", "id"]
+      visibleColumns: ["id", "role", "phone", "username", "name", "email"],
+      columnOrder: ["name", "email", "role", "username", "phone", "id"]
     };
 
     await pool.query(`

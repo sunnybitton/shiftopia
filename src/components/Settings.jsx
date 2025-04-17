@@ -62,15 +62,18 @@ const Settings = () => {
         throw new Error('Failed to fetch column preferences');
       }
       const data = await response.json();
+      // Filter out id fields and clean IDs
+      const cleanedVisibleColumns = data.visibleColumns
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
+
+      const cleanedColumnOrder = data.columnOrder
+        .filter(col => col !== 'id')
+        .map(col => col.replace(/[^a-zA-Z0-9_]/g, '_'));
       // Filter out id and active fields, clean IDs, and ensure columnOrder matches visibleColumns
       const filteredPreferences = {
-        visibleColumns: data.visibleColumns
-          .filter(col => col !== 'id' && col !== 'active')
-          .map(cleanId),
-        columnOrder: data.columnOrder
-          .filter(col => col !== 'id' && col !== 'active')
-          .map(cleanId)
-          .filter(col => data.visibleColumns.map(cleanId).includes(cleanId(col)))
+        visibleColumns: cleanedVisibleColumns,
+        columnOrder: cleanedColumnOrder
       };
       setColumnPreferences(filteredPreferences);
       localStorage.setItem('columnPreferences', JSON.stringify(filteredPreferences));

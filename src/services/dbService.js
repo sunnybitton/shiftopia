@@ -99,16 +99,16 @@ export const employeeOperations = {
       });
       console.log('Response status:', response.status);
 
+      const data = await response.json();
+      console.log('Response data:', data);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || 
+          data.error || data.details || 
           `Failed to update employee (HTTP ${response.status})`
         );
       }
 
-      const data = await response.json();
-      console.log('Received data:', data);
       return data;
     } catch (error) {
       console.error('Error updating employee:', error);
