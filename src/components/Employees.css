@@ -225,7 +225,8 @@
   align-items: start;
 }
 
-.employee-form input {
+.employee-form input,
+.employee-form .role-select {
   padding: 0.75rem;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -234,13 +235,15 @@
   transition: all 0.2s;
 }
 
-.employee-form input:focus {
+.employee-form input:focus,
+.employee-form .role-select:focus {
   outline: none;
   border-color: #39587F;
   box-shadow: 0 0 0 3px rgba(57, 88, 127, 0.1);
 }
 
-.employee-form input::placeholder {
+.employee-form input::placeholder,
+.employee-form .role-select::placeholder {
   color: #999;
 }
 
@@ -301,6 +304,12 @@
   .icon-button svg {
     width: 14px;
     height: 14px;
+  }
+
+  .employee-form input,
+  .employee-form .role-select {
+    font-size: 14px;
+    padding: 8px 12px;
   }
 }
 

@@ -213,22 +213,44 @@ const Employees = () => {
     return (
       <form onSubmit={onSubmit} className="employee-form">
         {fieldsToShow.map(columnId => (
-          <input
-            key={columnId}
-            type={columnId === 'email' ? 'email' : columnId === 'phone' ? 'tel' : 'text'}
-            placeholder={getColumnLabel(columnId)}
-            value={employee[columnId] || ''}
-            onChange={(e) => {
-              const updatedEmployee = onCancel
-                ? { ...editingEmployee, [columnId]: e.target.value }
-                : { ...newEmployee, [columnId]: e.target.value };
-              
-              onCancel
-                ? setEditingEmployee(updatedEmployee)
-                : setNewEmployee(updatedEmployee);
-            }}
-            required={columnId === 'name' || columnId === 'email'}
-          />
+          columnId === 'role' ? (
+            <select
+              key={columnId}
+              value={employee[columnId] || ''}
+              onChange={(e) => {
+                const updatedEmployee = onCancel
+                  ? { ...editingEmployee, [columnId]: e.target.value }
+                  : { ...newEmployee, [columnId]: e.target.value };
+                
+                onCancel
+                  ? setEditingEmployee(updatedEmployee)
+                  : setNewEmployee(updatedEmployee);
+              }}
+              required
+              className="role-select"
+            >
+              <option value="">Select Role</option>
+              <option value="Employee">Employee</option>
+              <option value="Manager">Manager</option>
+            </select>
+          ) : (
+            <input
+              key={columnId}
+              type={columnId === 'email' ? 'email' : columnId === 'phone' ? 'tel' : 'text'}
+              placeholder={getColumnLabel(columnId)}
+              value={employee[columnId] || ''}
+              onChange={(e) => {
+                const updatedEmployee = onCancel
+                  ? { ...editingEmployee, [columnId]: e.target.value }
+                  : { ...newEmployee, [columnId]: e.target.value };
+                
+                onCancel
+                  ? setEditingEmployee(updatedEmployee)
+                  : setNewEmployee(updatedEmployee);
+              }}
+              required={columnId === 'name' || columnId === 'email'}
+            />
+          )
         ))}
         {!onCancel && (
           <input

@@ -28,7 +28,6 @@ const Settings = () => {
     { id: 'email', label: 'Email', required: false },
     { id: 'role', label: 'Role', required: false },
     { id: 'username', label: 'Username', required: false },
-    { id: 'worker_id', label: 'Worker ID', required: false },
     { id: 'phone', label: 'Phone', required: false }
   ];
 
@@ -36,6 +35,8 @@ const Settings = () => {
   const cleanId = (id) => id.replace(/[^\w-]/g, '');
 
   useEffect(() => {
+    // Clear old preferences from localStorage
+    localStorage.removeItem('columnPreferences');
     fetchColumnPreferences();
   }, []);
 
@@ -212,7 +213,11 @@ const Settings = () => {
       }
 
       // Get the default preferences from the response and clean IDs
-      const defaultPreferences = await response.json();
+      const defaultPreferences = {
+        visibleColumns: ["id", "role", "phone", "username", "name", "email"],
+        columnOrder: ["name", "email", "role", "username", "phone", "id"]
+      };
+
       const cleanedPreferences = {
         visibleColumns: defaultPreferences.visibleColumns.map(cleanId),
         columnOrder: defaultPreferences.columnOrder.map(cleanId)
