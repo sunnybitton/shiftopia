@@ -1,6 +1,17 @@
+import { getToken, setToken, removeToken } from './auth.js';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 console.log('API URL:', API_URL); // Log the API URL being used
+
+function buildHeaders(extra = {}) {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+}
 
 // Employee operations
 export const employeeOperations = {
@@ -8,7 +19,9 @@ export const employeeOperations = {
   async getAllEmployees() {
     try {
       console.log('Making request to:', `${API_URL}/employees`);
-      const response = await fetch(`${API_URL}/employees`);
+      const response = await fetch(`${API_URL}/employees`, {
+        headers: buildHeaders(),
+      });
       console.log('Response status:', response.status);
       
       if (!response.ok) {
@@ -32,7 +45,9 @@ export const employeeOperations = {
   async getEmployeeByEmail(email) {
     try {
       console.log('Making request to:', `${API_URL}/employees/email/${email}`);
-      const response = await fetch(`${API_URL}/employees/email/${email}`);
+      const response = await fetch(`${API_URL}/employees/email/${email}`, {
+        headers: buildHeaders(),
+      });
       console.log('Response status:', response.status);
 
       if (!response.ok) {
@@ -60,9 +75,7 @@ export const employeeOperations = {
       
       const response = await fetch(`${API_URL}/employees`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(),
         body: JSON.stringify(employee),
       });
       console.log('Response status:', response.status);
@@ -92,9 +105,7 @@ export const employeeOperations = {
       
       const response = await fetch(`${API_URL}/employees/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(),
         body: JSON.stringify(updates),
       });
       console.log('Response status:', response.status);
@@ -123,6 +134,7 @@ export const employeeOperations = {
       
       const response = await fetch(`${API_URL}/employees/${id}`, {
         method: 'DELETE',
+        headers: buildHeaders(),
       });
       console.log('Response status:', response.status);
 
@@ -166,8 +178,10 @@ export const employeeOperations = {
       }
 
       const data = await response.json();
+      // Store token if present
+      if (data.token) setToken(data.token);
       console.log('Login successful');
-      return { user: data, message: null };
+      return { user: data.user, message: null };
     } catch (error) {
       console.error('Error during login:', error);
       return { user: null, message: 'An error occurred during login' };

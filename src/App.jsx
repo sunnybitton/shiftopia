@@ -10,6 +10,7 @@ import Messages from './components/Messages';
 import Worksheets from './components/Worksheets';
 import MobileNavigation from './components/MobileNavigation';
 import ErrorBoundary from './components/ErrorBoundary';
+import Requests from './components/Requests';
 import './App.css';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
                         } 
                       />
                       <Route path="/schedule" element={<Schedule />} />
+                      <Route path="/requests" element={<Requests />} />
                       <Route 
                         path="/messages" 
                         element={

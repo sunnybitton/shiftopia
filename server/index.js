@@ -6,6 +6,7 @@ const { Pool } = pkg;
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,6 +15,8 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 // Configure CORS with specific origins
 const corsOptions = {
@@ -330,6 +333,36 @@ console.log('Auth credentials loaded:', {
   hasPrivateKey: !!process.env.GOOGLE_PRIVATE_KEY,
   formattedKeyLength: formatPrivateKey(process.env.GOOGLE_PRIVATE_KEY).length
 });
+
+// JWT middleware
+function authenticateJWT(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (err) return res.status(401).json({ error: 'Invalid token' });
+      req.user = user;
+      next();
+    });
+  } else {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+}
+
+// Update getUserContext to use req.user
+function getUserContext(req) {
+  if (req.user) {
+    return {
+      userId: req.user.id,
+      role: req.user.role
+    };
+  }
+  // fallback for dev/testing
+  return {
+    userId: req.body.userId || req.query.userId || req.headers['x-user-id'],
+    role: req.body.role || req.query.role || req.headers['x-user-role']
+  };
+}
 
 // Employee endpoints
 app.get('/api/employees', async (req, res) => {
@@ -727,36 +760,33 @@ app.delete('/api/employees/:id', async (req, res) => {
   }
 });
 
-// Authentication endpoints
+// Update login endpoint to issue JWT
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
     console.log('Login attempt:', { email, hasPassword: !!password });
-    
     if (!email || !password) {
       console.error('Missing credentials:', { hasEmail: !!email, hasPassword: !!password });
       return res.status(400).json({ error: 'Email and password are required' });
     }
-
     const result = await pool.query(
       'SELECT id, name, email, role, phone, username FROM employees WHERE email = $1 AND password = $2',
       [email, password]
     );
-    
-    console.log('Query result:', { 
+    console.log('Query result:', {
       rowCount: result.rowCount,
       hasRows: result.rows.length > 0,
       userFound: result.rows.length > 0 ? 'Yes' : 'No'
     });
-    
     if (result.rows.length === 0) {
       console.log('Invalid credentials for:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+    const user = result.rows[0];
+    // Issue JWT
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
     console.log('Successful login for:', email);
-    res.json(result.rows[0]);
+    res.json({ user, token });
   } catch (error) {
     console.error('Detailed login error:', {
       message: error.message,
@@ -1545,6 +1575,114 @@ app.get('/health', async (req, res) => {
         nodeEnv: process.env.NODE_ENV
       }
     });
+  }
+});
+
+// --- Requests API ---
+// Apply JWT middleware to all requests endpoints
+app.post('/api/requests', authenticateJWT, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { userId, role } = getUserContext(req);
+    let { employee_id, type, single_or_multiple, date, start_date, end_date, note } = req.body;
+    if (!type || !single_or_multiple || (single_or_multiple === 'single' && !date) || (single_or_multiple === 'multiple' && (!start_date || !end_date))) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (note && note.length > 120) {
+      return res.status(400).json({ error: 'Note too long (max 120 chars)' });
+    }
+    // Only managers can create for others
+    if (role !== 'manager') {
+      employee_id = userId;
+    } else {
+      if (!employee_id) return res.status(400).json({ error: 'Employee required' });
+    }
+    // Insert
+    const result = await client.query(
+      `INSERT INTO requests (employee_id, type, single_or_multiple, date, start_date, end_date, note, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
+       RETURNING *`,
+      [employee_id, type, single_or_multiple, date || null, start_date || null, end_date || null, note || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating request:', err);
+    res.status(500).json({ error: 'Failed to create request' });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/requests - List requests
+app.get('/api/requests', authenticateJWT, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { userId, role } = getUserContext(req);
+    let query = 'SELECT r.*, e.name as employee_name FROM requests r JOIN employees e ON r.employee_id = e.id';
+    let params = [];
+    if (role !== 'manager') {
+      query += ' WHERE r.employee_id = $1 ORDER BY r.created_at DESC';
+      params = [userId];
+    } else {
+      query += ' ORDER BY r.created_at DESC';
+    }
+    const result = await client.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching requests:', err);
+    res.status(500).json({ error: 'Failed to fetch requests' });
+  } finally {
+    client.release();
+  }
+});
+
+// PUT /api/requests/:id/approve - Approve a request (manager only)
+app.put('/api/requests/:id/approve', authenticateJWT, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { role } = getUserContext(req);
+    if (role !== 'manager') {
+      return res.status(403).json({ error: 'Only managers can approve requests' });
+    }
+    const { id } = req.params;
+    const result = await client.query(
+      `UPDATE requests SET status = 'approved', updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error approving request:', err);
+    res.status(500).json({ error: 'Failed to approve request' });
+  } finally {
+    client.release();
+  }
+});
+
+// PUT /api/requests/:id/deny - Deny a request (manager only)
+app.put('/api/requests/:id/deny', authenticateJWT, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { role } = getUserContext(req);
+    if (role !== 'manager') {
+      return res.status(403).json({ error: 'Only managers can deny requests' });
+    }
+    const { id } = req.params;
+    const result = await client.query(
+      `UPDATE requests SET status = 'denied', updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error denying request:', err);
+    res.status(500).json({ error: 'Failed to deny request' });
+  } finally {
+    client.release();
   }
 });
 
