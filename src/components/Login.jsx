@@ -25,7 +25,7 @@ const Login = () => {
 
     try {
       const response = await employeeOperations.login(email, password);
-      
+      console.log('Login response:', response);
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
         window.location.href = '/';
