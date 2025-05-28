@@ -72,8 +72,7 @@ app.use((req, res, next) => {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false,
-    sslmode: 'require'
+    rejectUnauthorized: false
   },
   max: 20, // Reduced from 50 to prevent connection overload
   min: 4,  // Increased from 0 to maintain some connections
