@@ -763,20 +763,22 @@ app.delete('/api/employees/:id', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt:', { email, hasPassword: !!password });
+    console.log('Login attempt:', { email, password });
     if (!email || !password) {
       console.error('Missing credentials:', { hasEmail: !!email, hasPassword: !!password });
       return res.status(400).json({ error: 'Email and password are required' });
     }
+    // Log the user in the DB
+    const userCheck = await pool.query(
+      'SELECT id, name, email, password FROM employees WHERE email = $1',
+      [email]
+    );
+    console.log('User in DB:', userCheck.rows[0]);
     const result = await pool.query(
       'SELECT id, name, email, role, phone, username FROM employees WHERE email = $1 AND password = $2',
       [email, password]
     );
-    console.log('Query result:', {
-      rowCount: result.rowCount,
-      hasRows: result.rows.length > 0,
-      userFound: result.rows.length > 0 ? 'Yes' : 'No'
-    });
+    console.log('Query result:', result.rows);
     if (result.rows.length === 0) {
       console.log('Invalid credentials for:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
