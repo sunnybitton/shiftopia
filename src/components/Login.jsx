@@ -26,8 +26,8 @@ const Login = () => {
     try {
       const response = await employeeOperations.login(email, password);
       console.log('Login response:', response);
-      if (response.user) {
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (response && response.id) {
+        localStorage.setItem('user', JSON.stringify(response));
         if (response.token) {
           localStorage.setItem('token', response.token);
         }
