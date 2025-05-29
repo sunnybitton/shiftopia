@@ -181,7 +181,8 @@ export const employeeOperations = {
       // Store token if present
       if (data.token) setToken(data.token);
       console.log('Login successful');
-      return { user: data.user, message: null };
+      // Return the full data object so the frontend can access user and token
+      return data;
     } catch (error) {
       console.error('Error during login:', error);
       return { user: null, message: 'An error occurred during login' };

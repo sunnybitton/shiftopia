@@ -28,6 +28,9 @@ const Login = () => {
       console.log('Login response:', response);
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
         window.location.href = '/';
       } else {
         setError(response.message || 'Invalid credentials');
